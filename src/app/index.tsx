@@ -1,3 +1,4 @@
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,12 +12,49 @@ import {
   View,
 } from "react-native";
 import { activities } from "../data/activities";
+import { anonymousLogin, db } from "../services/firebase";
 
 export default function HomeScreen() {
   const [screen, setScreen] = useState("team");
   const [teamName, setTeamName] = useState("");
+  const [memberNames, setMemberNames] = useState("");
   const [grade, setGrade] = useState("");
+  const [teamId, setTeamId] = useState("");
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
+
+  const createDiscriminator = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+
+  const handleTeamSetup = async () => {
+    if (!teamName.trim() || !memberNames.trim() || !grade.trim()) {
+      Alert.alert("Missing details", "Please enter team name, members, and grade/year.");
+      return;
+    }
+
+    try {
+      const user = await anonymousLogin();
+      const discriminator = createDiscriminator();
+
+      const docRef = await addDoc(collection(db, "teams"), {
+        teamName: teamName.trim(),
+        members: memberNames.split(",").map((name) => name.trim()),
+        grade: grade.trim(),
+        discriminator,
+        userId: user.uid,
+        totalScore: 0,
+        badges: [],
+        createdAt: serverTimestamp(),
+      });
+
+      setTeamId(docRef.id);
+      Alert.alert("Team saved", `Team discriminator: ${discriminator}`);
+      setScreen("home");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Firebase error", "Could not save team. Check Firebase setup.");
+    }
+  };
 
   if (screen === "team") {
     return (
@@ -33,16 +71,20 @@ export default function HomeScreen() {
 
         <TextInput
           style={styles.input}
+          placeholder="Enter member names separated by commas"
+          value={memberNames}
+          onChangeText={setMemberNames}
+        />
+
+        <TextInput
+          style={styles.input}
           placeholder="Enter grade/year level"
           value={grade}
           onChangeText={setGrade}
         />
 
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => setScreen("home")}
-        >
-          <Text style={styles.buttonText}>Continue</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={handleTeamSetup}>
+          <Text style={styles.buttonText}>Save Team</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -54,6 +96,7 @@ export default function HomeScreen() {
         <Text style={styles.title}>STEMM Lab</Text>
         <Text style={styles.subtitle}>Welcome, {teamName || "Team"}</Text>
         <Text style={styles.bodyText}>Grade/Year: {grade || "Not set"}</Text>
+        <Text style={styles.smallText}>Team ID: {teamId || "Not saved yet"}</Text>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Team Progress</Text>
@@ -258,6 +301,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
     color: "#334155",
+  },
+  smallText: {
+    fontSize: 13,
+    marginBottom: 12,
+    color: "#64748b",
   },
   input: {
     backgroundColor: "#ffffff",
