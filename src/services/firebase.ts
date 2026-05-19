@@ -1,5 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import {
+  getAuth,
+  signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -20,5 +25,14 @@ export const storage = getStorage(app);
 
 export async function anonymousLogin() {
   const result = await signInAnonymously(auth);
+  return result.user;
+}
+export async function registerWithEmail(email: string, password: string) {
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  return result.user;
+}
+
+export async function loginWithEmail(email: string, password: string) {
+  const result = await signInWithEmailAndPassword(auth, email, password);
   return result.user;
 }

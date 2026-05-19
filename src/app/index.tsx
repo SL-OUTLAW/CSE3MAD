@@ -12,10 +12,12 @@ import {
   View,
 } from "react-native";
 import { activities } from "../data/activities";
-import { anonymousLogin, db } from "../services/firebase";
+import { db, registerWithEmail } from "../services/firebase";
 
 export default function HomeScreen() {
   const [screen, setScreen] = useState("team");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState(""); 
   const [teamName, setTeamName] = useState("");
   const [memberNames, setMemberNames] = useState("");
   const [grade, setGrade] = useState("");
@@ -27,13 +29,18 @@ export default function HomeScreen() {
   };
 
   const handleTeamSetup = async () => {
-    if (!teamName.trim() || !memberNames.trim() || !grade.trim()) {
-      Alert.alert("Missing details", "Please enter team name, members, and grade/year.");
-      return;
-    }
+    if (!email.trim() || !password.trim() || !teamName.trim() || !memberNames.trim() || !grade.trim()) {
+  Alert.alert("Missing details", "Please enter email, password, team name, members, and grade/year.");
+  return;
+}
+
+    if (password.length < 6) {
+  Alert.alert("Weak password", "Password must be at least 6 characters.");
+  return;
+}
 
     try {
-      const user = await anonymousLogin();
+      const user = await registerWithEmail(email.trim(), password);
       const discriminator = createDiscriminator();
 
       const docRef = await addDoc(collection(db, "teams"), {
@@ -64,11 +71,25 @@ export default function HomeScreen() {
 
         <TextInput
           style={styles.input}
+          placeholder="Enter email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+/>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+/>
+        <TextInput
+          style={styles.input}
           placeholder="Enter team name"
           value={teamName}
           onChangeText={setTeamName}
-        />
-
+/>
         <TextInput
           style={styles.input}
           placeholder="Enter member names separated by commas"
