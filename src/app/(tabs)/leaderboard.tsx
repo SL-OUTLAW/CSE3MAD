@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MOCK_TEAMS = [
@@ -25,13 +20,20 @@ export default function LeaderboardScreen() {
         {MOCK_TEAMS.map((team) => (
           <View
             key={team.rank}
-            style={[
-              styles.row,
-              team.rank === 1 && styles.rowFirst,
-            ]}
+            style={[styles.row, team.rank === 1 && styles.rowFirst]}
           >
-            <View style={[styles.rankBadge, team.rank === 1 && styles.rankBadgeFirst]}>
-              <Text style={[styles.rankText, team.rank === 1 && styles.rankTextFirst]}>
+            <View
+              style={[
+                styles.rankBadge,
+                team.rank === 1 && styles.rankBadgeFirst,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.rankText,
+                  team.rank === 1 && styles.rankTextFirst,
+                ]}
+              >
                 #{team.rank}
               </Text>
             </View>

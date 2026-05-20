@@ -65,7 +65,7 @@ export default function HomeScreen() {
   const [teamId, setTeamId] = useState("");
 
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
-    null
+    null,
   );
 
   const createDiscriminator = () => {
@@ -82,7 +82,7 @@ export default function HomeScreen() {
     ) {
       Alert.alert(
         "Missing details",
-        "Please enter email, password, team name, members, and grade/year."
+        "Please enter email, password, team name, members, and grade/year.",
       );
       return;
     }
@@ -115,7 +115,7 @@ export default function HomeScreen() {
       console.error(error);
       Alert.alert(
         "Firebase error",
-        "Could not save team. Check Firebase Authentication and Firestore."
+        "Could not save team. Check Firebase Authentication and Firestore.",
       );
     }
   };

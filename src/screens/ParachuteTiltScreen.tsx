@@ -1,18 +1,14 @@
 import { Gyroscope } from "expo-sensors";
 import React, { useEffect, useState } from "react";
-import {
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type ParachuteTiltScreenProps = {
   onBack: () => void;
 };
 
-export default function ParachuteTiltScreen({ onBack }: ParachuteTiltScreenProps) {
+export default function ParachuteTiltScreen({
+  onBack,
+}: ParachuteTiltScreenProps) {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [xRotation, setXRotation] = useState(0);
@@ -30,7 +26,7 @@ export default function ParachuteTiltScreen({ onBack }: ParachuteTiltScreenProps
       if (!available) {
         Alert.alert(
           "Gyroscope unavailable",
-          "This device does not support gyroscope readings."
+          "This device does not support gyroscope readings.",
         );
       }
     };
@@ -49,7 +45,8 @@ export default function ParachuteTiltScreen({ onBack }: ParachuteTiltScreenProps
         setYRotation(yValue);
         setZRotation(zValue);
 
-        const totalTilt = Math.abs(xValue) + Math.abs(yValue) + Math.abs(zValue);
+        const totalTilt =
+          Math.abs(xValue) + Math.abs(yValue) + Math.abs(zValue);
 
         if (totalTilt < 0.3) {
           setTiltStatus("Stable drop");

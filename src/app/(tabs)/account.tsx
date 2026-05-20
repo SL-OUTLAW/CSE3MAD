@@ -10,10 +10,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MENU_ITEMS = [
-  { label: "Team", route: "/team-setup" },
+  { label: "Team", route: null },
   { label: "History", route: null },
   { label: "Settings", route: null },
   { label: "Help", route: null },
+  { label: "Sign out", route: null },
 ];
 
 export default function AccountScreen() {
@@ -24,7 +25,6 @@ export default function AccountScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Account</Text>
 
-        {/* Profile card */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>T</Text>
@@ -35,7 +35,6 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        {/* Menu items */}
         <View style={styles.menuContainer}>
           {MENU_ITEMS.map((item) => (
             <TouchableOpacity

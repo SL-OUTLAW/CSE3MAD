@@ -25,12 +25,8 @@ export default function HomeScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={styles.title}>STEMM Lab</Text>
-          <Text style={styles.subtitle}>
-            Welcome, {teamName || "Team"}
-          </Text>
-          <Text style={styles.bodyText}>
-            Grade/Year: {grade || "Not set"}
-          </Text>
+          <Text style={styles.subtitle}>Welcome, {teamName || "Team"}</Text>
+          <Text style={styles.bodyText}>Grade/Year: {grade || "Not set"}</Text>
           <Text style={styles.smallText}>
             Team ID: {teamId || "Not saved yet"}
           </Text>
@@ -58,7 +54,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => router.push("../team-setup")}
+            onPress={() => router.push("/")}
           >
             <Text style={styles.secondaryButtonText}>Edit Team Setup</Text>
           </TouchableOpacity>

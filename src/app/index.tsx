@@ -39,7 +39,7 @@ export default function TeamSetupScreen() {
     ) {
       Alert.alert(
         "Missing details",
-        "Please enter email, password, team name, members, and grade/year."
+        "Please enter email, password, team name, members, and grade/year.",
       );
       return;
     }
@@ -70,13 +70,13 @@ export default function TeamSetupScreen() {
       setTeamId(docRef.id);
 
       Alert.alert("Team saved", `Team discriminator: ${discriminator}`, [
-        { text: "OK", onPress: () => router.replace("../(tabs)") },
+        { text: "OK", onPress: () => router.replace("../(tabs)/home") },
       ]);
     } catch (error) {
       console.error(error);
       Alert.alert(
         "Firebase error",
-        "Could not save team. Check Firebase Authentication and Firestore."
+        "Could not save team. Check Firebase Authentication and Firestore.",
       );
     }
   };
@@ -91,13 +91,6 @@ export default function TeamSetupScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
-
           <Text style={styles.title}>STEMM Lab</Text>
           <Text style={styles.subtitle}>Team Setup</Text>
 

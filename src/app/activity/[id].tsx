@@ -1,13 +1,11 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -44,7 +42,10 @@ export default function ActivityDetailScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
             <Text style={styles.backText}>‹ Activities</Text>
           </TouchableOpacity>
 
@@ -64,7 +65,7 @@ export default function ActivityDetailScreen() {
           {activity.id === "A1" && (
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => router.push("../parachute-tilt")}
+              onPress={() => router.push("/activity-screens/parachute-tilt")}
             >
               <Text style={styles.buttonText}>Open Tilt Detector</Text>
             </TouchableOpacity>
@@ -73,7 +74,7 @@ export default function ActivityDetailScreen() {
           {activity.id === "A7" && (
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => router.push("../breathing")}
+              onPress={() => router.push("../activity-screens/breathing-pace")}
             >
               <Text style={styles.buttonText}>Open Breathing Sensor</Text>
             </TouchableOpacity>
@@ -82,7 +83,13 @@ export default function ActivityDetailScreen() {
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() =>
-              Alert.alert("Demo", "Result saved successfully")
+              router.push({
+                pathname: "/results",
+                params: {
+                  activityId: activity.id,
+                  activityTitle: activity.title,
+                },
+              })
             }
           >
             <Text style={styles.buttonText}>Enter Results</Text>
