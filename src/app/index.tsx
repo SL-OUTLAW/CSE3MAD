@@ -1,4 +1,3 @@
-import BreathingPaceScreen from "../screens/BreathingPaceScreen";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import React, { ReactNode, useState } from "react";
 import {
@@ -14,6 +13,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import BreathingPaceScreen from "../screens/BreathingPaceScreen";
+import ParachuteTiltScreen from "../screens/ParachuteTiltScreen";
 
 import { activities } from "../data/activities";
 import { db, registerWithEmail } from "../services/firebase";
@@ -115,6 +116,16 @@ export default function HomeScreen() {
       </ScreenWrapper>
     );
   }
+
+    if (screen === "parachuteTilt") {
+  return (
+    <ScreenWrapper>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ParachuteTiltScreen onBack={() => setScreen("detail")} />
+      </ScrollView>
+    </ScreenWrapper>
+  );
+}
 
   if (screen === "team") {
     return (
@@ -273,12 +284,20 @@ export default function HomeScreen() {
             ))}
           </View>
           
-        {selectedActivity.id === "A7" && (
-         <TouchableOpacity
-           style={styles.primaryButton}
-           onPress={() => setScreen("breathing")}
+{selectedActivity.id === "A7" && (
+  <TouchableOpacity
+    style={styles.primaryButton}
+    onPress={() => setScreen("breathing")}
   >
     <Text style={styles.buttonText}>Open Breathing Sensor</Text>
+  </TouchableOpacity>
+)}
+{selectedActivity.id === "A1" && (
+  <TouchableOpacity
+    style={styles.primaryButton}
+    onPress={() => setScreen("parachuteTilt")}
+  >
+    <Text style={styles.buttonText}>Open Tilt Detector</Text>
   </TouchableOpacity>
 )}
 
