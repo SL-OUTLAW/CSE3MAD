@@ -1,18 +1,14 @@
 import { Accelerometer } from "expo-sensors";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type BreathingPaceScreenProps = {
   onBack: () => void;
 };
 
-export default function BreathingPaceScreen({ onBack }: BreathingPaceScreenProps) {
+export default function BreathingPaceScreen({
+  onBack,
+}: BreathingPaceScreenProps) {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [movement, setMovement] = useState(0);
@@ -29,7 +25,7 @@ export default function BreathingPaceScreen({ onBack }: BreathingPaceScreenProps
       if (!available) {
         Alert.alert(
           "Accelerometer unavailable",
-          "This device does not support accelerometer readings."
+          "This device does not support accelerometer readings.",
         );
       }
     };

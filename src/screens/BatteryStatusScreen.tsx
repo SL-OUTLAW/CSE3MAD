@@ -1,18 +1,14 @@
 import * as Battery from "expo-battery";
 import React, { useEffect, useState } from "react";
-import {
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type BatteryStatusScreenProps = {
   onBack: () => void;
 };
 
-export default function BatteryStatusScreen({ onBack }: BatteryStatusScreenProps) {
+export default function BatteryStatusScreen({
+  onBack,
+}: BatteryStatusScreenProps) {
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
   const [batteryState, setBatteryState] = useState<string>("Checking...");
   const [lowBatteryWarning, setLowBatteryWarning] = useState(false);
@@ -36,7 +32,7 @@ export default function BatteryStatusScreen({ onBack }: BatteryStatusScreenProps
       setLowBatteryWarning(true);
       Alert.alert(
         "Low battery warning",
-        "Your device battery is below 20%. Please charge your device before continuing the activity."
+        "Your device battery is below 20%. Please charge your device before continuing the activity.",
       );
     } else {
       setLowBatteryWarning(false);
@@ -46,20 +42,24 @@ export default function BatteryStatusScreen({ onBack }: BatteryStatusScreenProps
   useEffect(() => {
     checkBattery();
 
-    const levelSubscription = Battery.addBatteryLevelListener(({ batteryLevel }) => {
-      const percent = Math.round(batteryLevel * 100);
-      setBatteryLevel(percent);
+    const levelSubscription = Battery.addBatteryLevelListener(
+      ({ batteryLevel }) => {
+        const percent = Math.round(batteryLevel * 100);
+        setBatteryLevel(percent);
 
-      if (percent < 20) {
-        setLowBatteryWarning(true);
-      } else {
-        setLowBatteryWarning(false);
-      }
-    });
+        if (percent < 20) {
+          setLowBatteryWarning(true);
+        } else {
+          setLowBatteryWarning(false);
+        }
+      },
+    );
 
-    const stateSubscription = Battery.addBatteryStateListener(({ batteryState }) => {
-      setBatteryState(getBatteryStateText(batteryState));
-    });
+    const stateSubscription = Battery.addBatteryStateListener(
+      ({ batteryState }) => {
+        setBatteryState(getBatteryStateText(batteryState));
+      },
+    );
 
     return () => {
       levelSubscription.remove();
@@ -90,7 +90,9 @@ export default function BatteryStatusScreen({ onBack }: BatteryStatusScreenProps
 
       <View style={styles.card}>
         <Text style={styles.label}>Low battery warning</Text>
-        <Text style={lowBatteryWarning ? styles.warningValue : styles.safeValue}>
+        <Text
+          style={lowBatteryWarning ? styles.warningValue : styles.safeValue}
+        >
           {lowBatteryWarning ? "Warning: below 20%" : "Battery level is safe"}
         </Text>
       </View>
