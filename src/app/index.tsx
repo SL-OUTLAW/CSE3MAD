@@ -13,11 +13,24 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BreathingPaceScreen from "../screens/BreathingPaceScreen";
-import ParachuteTiltScreen from "../screens/ParachuteTiltScreen";
 
 import { activities } from "../data/activities";
+import BatteryStatusScreen from "../screens/BatteryStatusScreen";
+import BreathingPaceScreen from "../screens/BreathingPaceScreen";
+import ParachuteTiltScreen from "../screens/ParachuteTiltScreen";
 import { db, registerWithEmail } from "../services/firebase";
+
+type ScreenName =
+  | "team"
+  | "home"
+  | "activities"
+  | "detail"
+  | "results"
+  | "leaderboard"
+  | "settings"
+  | "breathing"
+  | "parachuteTilt"
+  | "battery";
 
 type Activity = {
   id: string;
@@ -41,8 +54,7 @@ function ScreenWrapper({ children }: { children: ReactNode }) {
 }
 
 export default function HomeScreen() {
-  
-  const [screen, setScreen] = useState("team");
+  const [screen, setScreen] = useState<ScreenName>("team");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,7 +119,8 @@ export default function HomeScreen() {
       );
     }
   };
-    if (screen === "breathing") {
+
+  if (screen === "breathing") {
     return (
       <ScreenWrapper>
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -117,15 +130,25 @@ export default function HomeScreen() {
     );
   }
 
-    if (screen === "parachuteTilt") {
-  return (
-    <ScreenWrapper>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <ParachuteTiltScreen onBack={() => setScreen("detail")} />
-      </ScrollView>
-    </ScreenWrapper>
-  );
-}
+  if (screen === "parachuteTilt") {
+    return (
+      <ScreenWrapper>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ParachuteTiltScreen onBack={() => setScreen("detail")} />
+        </ScrollView>
+      </ScreenWrapper>
+    );
+  }
+
+  if (screen === "battery") {
+    return (
+      <ScreenWrapper>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <BatteryStatusScreen onBack={() => setScreen("settings")} />
+        </ScrollView>
+      </ScreenWrapper>
+    );
+  }
 
   if (screen === "team") {
     return (
@@ -180,7 +203,10 @@ export default function HomeScreen() {
             placeholderTextColor="#94a3b8"
           />
 
-          <TouchableOpacity style={styles.primaryButton} onPress={handleTeamSetup}>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleTeamSetup}
+          >
             <Text style={styles.buttonText}>Save Team</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -195,7 +221,9 @@ export default function HomeScreen() {
           <Text style={styles.title}>STEMM Lab</Text>
           <Text style={styles.subtitle}>Welcome, {teamName || "Team"}</Text>
           <Text style={styles.bodyText}>Grade/Year: {grade || "Not set"}</Text>
-          <Text style={styles.smallText}>Team ID: {teamId || "Not saved yet"}</Text>
+          <Text style={styles.smallText}>
+            Team ID: {teamId || "Not saved yet"}
+          </Text>
 
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Team Progress</Text>
@@ -234,7 +262,9 @@ export default function HomeScreen() {
       <ScreenWrapper>
         <View style={styles.listScreenContent}>
           <Text style={styles.title}>Activity Library</Text>
-          <Text style={styles.bodyText}>Choose one of the 7 STEMM activities.</Text>
+          <Text style={styles.bodyText}>
+            Choose one of the 7 STEMM activities.
+          </Text>
 
           <FlatList
             data={activities}
@@ -283,37 +313,38 @@ export default function HomeScreen() {
               </Text>
             ))}
           </View>
-          
-{selectedActivity.id === "A7" && (
-  <TouchableOpacity
-    style={styles.primaryButton}
-    onPress={() => setScreen("breathing")}
-  >
-    <Text style={styles.buttonText}>Open Breathing Sensor</Text>
-  </TouchableOpacity>
-)}
-{selectedActivity.id === "A1" && (
-  <TouchableOpacity
-    style={styles.primaryButton}
-    onPress={() => setScreen("parachuteTilt")}
-  >
-    <Text style={styles.buttonText}>Open Tilt Detector</Text>
-  </TouchableOpacity>
-)}
 
-<TouchableOpacity
-  style={styles.primaryButton}
-  onPress={() => setScreen("results")}
->
-  <Text style={styles.buttonText}>Enter Results</Text>
-</TouchableOpacity>
+          {selectedActivity.id === "A1" && (
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => setScreen("parachuteTilt")}
+            >
+              <Text style={styles.buttonText}>Open Tilt Detector</Text>
+            </TouchableOpacity>
+          )}
 
-<TouchableOpacity
-  style={styles.secondaryButton}
-  onPress={() => setScreen("activities")}
->
-  <Text style={styles.secondaryButtonText}>Back to Activities</Text>
-</TouchableOpacity>
+          {selectedActivity.id === "A7" && (
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => setScreen("breathing")}
+            >
+              <Text style={styles.buttonText}>Open Breathing Sensor</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() => setScreen("results")}
+          >
+            <Text style={styles.buttonText}>Enter Results</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setScreen("activities")}
+          >
+            <Text style={styles.secondaryButtonText}>Back to Activities</Text>
+          </TouchableOpacity>
         </ScrollView>
       </ScreenWrapper>
     );
@@ -413,6 +444,13 @@ export default function HomeScreen() {
             <Text style={styles.cardText}>Dark mode: Coming soon</Text>
             <Text style={styles.cardText}>Notifications: Coming soon</Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() => setScreen("battery")}
+          >
+            <Text style={styles.buttonText}>Check Battery Status</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.secondaryButton}
