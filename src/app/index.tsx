@@ -1,3 +1,4 @@
+import BreathingPaceScreen from "../screens/BreathingPaceScreen";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import React, { ReactNode, useState } from "react";
 import {
@@ -39,6 +40,7 @@ function ScreenWrapper({ children }: { children: ReactNode }) {
 }
 
 export default function HomeScreen() {
+  
   const [screen, setScreen] = useState("team");
 
   const [email, setEmail] = useState("");
@@ -104,6 +106,15 @@ export default function HomeScreen() {
       );
     }
   };
+    if (screen === "breathing") {
+    return (
+      <ScreenWrapper>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <BreathingPaceScreen onBack={() => setScreen("detail")} />
+        </ScrollView>
+      </ScreenWrapper>
+    );
+  }
 
   if (screen === "team") {
     return (
@@ -261,20 +272,29 @@ export default function HomeScreen() {
               </Text>
             ))}
           </View>
+          
+        {selectedActivity.id === "A7" && (
+         <TouchableOpacity
+           style={styles.primaryButton}
+           onPress={() => setScreen("breathing")}
+  >
+    <Text style={styles.buttonText}>Open Breathing Sensor</Text>
+  </TouchableOpacity>
+)}
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => setScreen("results")}
-          >
-            <Text style={styles.buttonText}>Enter Results</Text>
-          </TouchableOpacity>
+<TouchableOpacity
+  style={styles.primaryButton}
+  onPress={() => setScreen("results")}
+>
+  <Text style={styles.buttonText}>Enter Results</Text>
+</TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => setScreen("activities")}
-          >
-            <Text style={styles.secondaryButtonText}>Back to Activities</Text>
-          </TouchableOpacity>
+<TouchableOpacity
+  style={styles.secondaryButton}
+  onPress={() => setScreen("activities")}
+>
+  <Text style={styles.secondaryButtonText}>Back to Activities</Text>
+</TouchableOpacity>
         </ScrollView>
       </ScreenWrapper>
     );
