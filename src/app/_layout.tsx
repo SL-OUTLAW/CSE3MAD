@@ -1,7 +1,21 @@
 import { Stack } from "expo-router";
+import { useEffect } from "react";
 import { TeamProvider } from "../../context/TeamContext";
+import { startBatteryWarningService } from "../services/batteryService";
 
 export default function RootLayout() {
+  useEffect(() => {
+    let batterySubscription: { remove: () => void } | undefined;
+
+    startBatteryWarningService().then((subscription) => {
+      batterySubscription = subscription;
+    });
+
+    return () => {
+      batterySubscription?.remove();
+    };
+  }, []);
+
   return (
     <TeamProvider>
       <Stack screenOptions={{ headerShown: false }}>
