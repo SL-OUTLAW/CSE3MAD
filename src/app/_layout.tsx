@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { TeamProvider } from "../../context/TeamContext";
+import { startBatteryWarningService } from "../services/batteryService";
 import {
   addNotificationHandlers,
   registerForPushNotifications,
@@ -22,8 +23,15 @@ export default function RootLayout() {
       }
     );
 
+    let batterySubscription: { remove: () => void } | undefined;
+
+    startBatteryWarningService().then((subscription) => {
+      batterySubscription = subscription;
+    });
+
     return () => {
       removeNotificationHandlers();
+      batterySubscription?.remove();
     };
   }, []);
 
