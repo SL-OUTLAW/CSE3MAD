@@ -1,12 +1,40 @@
 export const activities = [
   {
-    id: "A1",
-    title: "Parachute Drop Challenge",
-    category: "Engineering + Physics",
-    description:
-      "Design and test a parachute to reduce landing speed and impact force.",
-    tools: ["Timer", "Video evidence", "Fall time result"],
-  },
+  id: "A1",
+  title: "Parachute Drop Challenge",
+  category: "Engineering + Physics",
+  description:
+    "Students design, build, and test a parachute for a small toy to reduce its landing speed and impact force.",
+  tools: [
+    "Timer",
+    "Video evidence",
+    "Fall time result",
+    "Gyroscope tilt detector",
+  ],
+  equipment: [
+    "Mobile phone with STEMM Lab app",
+    "Small toy, e.g. army toy soldier",
+    "Table or elevated surface",
+    "Paper or plastic",
+    "String",
+    "Scissors",
+    "Tape",
+  ],
+  instructions: [
+    "Drop the toy without a parachute and record the fall, as the baseline test.",
+    "Build a parachute using provided materials.",
+    "Drop the toy from the same height and record the fall.",
+    "Review speed and landing accuracy results in the app.",
+    "Redesign and test up to three prototypes within 20 minutes.",
+    "Upload videos, results, and team reflections.",
+  ],
+  diagramNotes: [
+    "Toy attached to parachute",
+    "Drop height marked",
+    "Target landing zone shown on floor",
+    "Simple labelled sketch",
+  ],
+},
   {
     id: "A2",
     title: "Sound Pollution Hunter",
