@@ -16,7 +16,7 @@ import { useTeam } from "../../../context/TeamContext";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { teamName, grade, teamId, rank } = useTeam();
+  const { teamName, grade, teamId, rank, score } = useTeam();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -33,12 +33,15 @@ export default function HomeScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardTextGroup}>
-              <Text style={styles.cardTitle}>
+              <Text
+                style={[styles.cardTitle, { fontSize: 24, marginBottom: 25 }]}
+              >
                 {teamName || "Team"} {rank ? `#${rank}` : "#unranked"}
               </Text>
-              <Text style={styles.cardText}>Score: 0 points</Text>
-              <Text style={styles.cardText}>Completed activities: 0 / 7</Text>
-              <Text style={styles.cardText}>Badges: 0</Text>
+              <Text style={[styles.cardTitle, { fontSize: 20 }]}>
+                Score : {score} points
+              </Text>
+              <Text style={styles.cardText}>Grade : {grade}</Text>
             </View>
 
             <TouchableOpacity
@@ -52,26 +55,26 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => router.push("../(tabs)/activities")}
-          >
-            <Text style={styles.buttonText}>View Activities</Text>
-          </TouchableOpacity>
+          <View style={[styles.card, { alignItems: "flex-start" }]}>
+            <View style={styles.cardTextGroup}>
+              <Text style={styles.cardTitle}>Recent</Text>
+            </View>
+          </View>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("../(tabs)/leaderboard")}
+          <View
+            style={[
+              styles.card,
+              {
+                height: 312,
+                marginBottom: 0,
+                alignItems: "flex-start",
+              },
+            ]}
           >
-            <Text style={styles.secondaryButtonText}>Leaderboard</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("/")}
-          >
-            <Text style={styles.secondaryButtonText}>Edit Team Setup</Text>
-          </TouchableOpacity>
+            <View style={styles.cardTextGroup}>
+              <Text style={styles.cardTitle}>Upcoming challenges</Text>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 28,
+    paddingBottom: 12,
   },
   title: {
     fontSize: 28,
@@ -115,7 +118,7 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     backgroundColor: "#ffffff",
-    height: 135,
+    height: 145,
     padding: 16,
     paddingTop: 14,
     borderRadius: 14,
@@ -126,8 +129,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },

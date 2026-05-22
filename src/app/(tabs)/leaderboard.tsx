@@ -15,7 +15,7 @@ import {
 } from "../../services/leaderboardService";
 
 export default function LeaderboardScreen() {
-  const { teamId, setRank } = useTeam();
+  const { teamId, setRank, setScore } = useTeam();
   const [teams, setTeams] = useState<LeaderboardTeam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -27,6 +27,11 @@ export default function LeaderboardScreen() {
         setTeams(leaderboardTeams);
         setErrorMessage("");
         setIsLoading(false);
+
+        const currentTeam = leaderboardTeams.find((t) => t.id === teamId);
+        if (currentTeam) {
+          setScore(currentTeam.totalScore);
+        }
       },
       (rank) => {
         setRank(rank);
@@ -38,7 +43,7 @@ export default function LeaderboardScreen() {
     );
 
     return unsubscribe;
-  }, [teamId, setRank]);
+  }, [teamId, setRank, setScore]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
