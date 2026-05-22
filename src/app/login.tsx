@@ -67,14 +67,7 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.title}>STEMM Lab</Text>
+          <Text style={styles.title}>Side Quest</Text>
           <Text style={styles.subtitle}>Login</Text>
 
           <TextInput
@@ -132,7 +125,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 20,
     fontWeight: "700",
-    marginBottom: 16,
+    marginBottom: 30,
     color: "#1e293b",
   },
   input: {
