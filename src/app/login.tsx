@@ -1,4 +1,3 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -13,70 +12,50 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { db, registerWithEmail } from "../services/firebase";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { useTeam } from "../../context/TeamContext";
+import { db, loginWithEmail } from "../services/firebase";
 
-export default function TeamSetupScreen() {
+export default function LoginScreen() {
   const router = useRouter();
-  const { setTeamName, setGrade, setTeamId } = useTeam();
 
+  const { setTeamName, setGrade, setTeamId } = useTeam();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [teamName, setLocalTeamName] = useState("");
-  const [memberNames, setMemberNames] = useState("");
-  const [grade, setLocalGrade] = useState("");
 
-  const createDiscriminator = () =>
-    Math.floor(1000 + Math.random() * 9000).toString();
-
-  const handleTeamSetup = async () => {
-    if (
-      !email.trim() ||
-      !password.trim() ||
-      !teamName.trim() ||
-      !memberNames.trim() ||
-      !grade.trim()
-    ) {
-      Alert.alert(
-        "Missing details",
-        "Please enter email, password, team name, members, and grade/year.",
-      );
-      return;
-    }
-
-    if (password.length < 6) {
-      Alert.alert("Weak password", "Password must be at least 6 characters.");
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Missing details", "Please enter your email and password.");
       return;
     }
 
     try {
-      const user = await registerWithEmail(email.trim(), password);
-      const discriminator = createDiscriminator();
+      const user = await loginWithEmail(email.trim(), password);
 
-      const docRef = await addDoc(collection(db, "teams"), {
-        email: email.trim(),
-        teamName: teamName.trim(),
-        members: memberNames.split(",").map((name) => name.trim()),
-        grade: grade.trim(),
-        discriminator,
-        userId: user.uid,
-        totalScore: 0,
-        badges: [],
-        createdAt: serverTimestamp(),
-      });
+      const teamQuery = query(
+        collection(db, "teams"),
+        where("userId", "==", user.uid),
+        limit(1),
+      );
 
-      setTeamName(teamName.trim());
-      setGrade(grade.trim());
-      setTeamId(docRef.id);
+      const teamSnapshot = await getDocs(teamQuery);
 
-      Alert.alert("Team saved", `Team discriminator: ${discriminator}`, [
+      if (!teamSnapshot.empty) {
+        const teamDoc = teamSnapshot.docs[0];
+        const teamData = teamDoc.data();
+
+        setTeamId(teamDoc.id);
+        setTeamName(String(teamData.teamName ?? ""));
+        setGrade(String(teamData.grade ?? ""));
+      }
+
+      Alert.alert("Login successful", "Welcome back.", [
         { text: "OK", onPress: () => router.replace("../(tabs)/home") },
       ]);
-    } catch (error) {
-      console.error(error);
+    } catch {
       Alert.alert(
-        "Firebase error",
-        "Could not save team. Check Firebase Authentication and Firestore.",
+        "Login failed",
+        "Could not log in. Please check your email and password.",
       );
     }
   };
@@ -88,8 +67,15 @@ export default function TeamSetupScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backText}>‹ Back</Text>
+          </TouchableOpacity>
+
           <Text style={styles.title}>STEMM Lab</Text>
-          <Text style={styles.subtitle}>Team Setup</Text>
+          <Text style={styles.subtitle}>Login</Text>
 
           <TextInput
             style={styles.input}
@@ -110,43 +96,15 @@ export default function TeamSetupScreen() {
             placeholderTextColor="#94a3b8"
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter team name"
-            value={teamName}
-            onChangeText={setLocalTeamName}
-            placeholderTextColor="#94a3b8"
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Enter member names separated by commas"
-            value={memberNames}
-            onChangeText={setMemberNames}
-            placeholderTextColor="#94a3b8"
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Enter grade/year level"
-            value={grade}
-            onChangeText={setLocalGrade}
-            placeholderTextColor="#94a3b8"
-          />
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleTeamSetup}
-          >
-            <Text style={styles.buttonText}>Create Team</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => router.push("/login")}
+            onPress={() => router.replace("/")}
           >
-            <Text style={styles.secondaryButtonText}>
-              Already have a team? Login
-            </Text>
+            <Text style={styles.secondaryButtonText}>Create New Team</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -210,9 +168,5 @@ const styles = StyleSheet.create({
     borderColor: "#2563eb",
   },
   buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "800" },
-  secondaryButtonText: {
-    color: "#2563eb",
-    fontSize: 16,
-    fontWeight: "800",
-  },
+  secondaryButtonText: { color: "#2563eb", fontSize: 16, fontWeight: "800" },
 });
