@@ -1,4 +1,4 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { syncResult } from "../services/resultSyncService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { db } from "../services/firebase";
 import { useTeam } from "../../context/TeamContext";
 
 export default function ResultsScreen() {
@@ -35,14 +34,13 @@ export default function ResultsScreen() {
     }
 
     try {
-      await addDoc(collection(db, "results"), {
+      await syncResult({
         teamId,
         activityId,
         activityTitle,
-        measuredValue: measuredValue.trim(),
-        rating: rating.trim(),
-        comment: comment.trim(),
-        submittedAt: serverTimestamp(),
+        measuredValue,
+        rating,
+        comment,
       });
 
       Alert.alert("Saved", "Result saved successfully!", [
