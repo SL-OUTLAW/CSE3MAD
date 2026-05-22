@@ -1,48 +1,103 @@
-import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const MOCK_TEAMS = [
-  { rank: 1, name: "Team Alpha", points: 120 },
-  { rank: 2, name: "Team Beta", points: 95 },
-  { rank: 3, name: "Team Gamma", points: 80 },
-  { rank: 4, name: "Team Delta", points: 65 },
-  { rank: 5, name: "Team Epsilon", points: 50 },
-  { rank: 6, name: "Team Zeta", points: 35 },
-];
+import {
+  LeaderboardTeam,
+  listenToLeaderboard,
+} from "../../services/leaderboardService";
 
 export default function LeaderboardScreen() {
+  const [teams, setTeams] = useState<LeaderboardTeam[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = listenToLeaderboard(
+      (leaderboardTeams) => {
+        setTeams(leaderboardTeams);
+        setErrorMessage("");
+        setIsLoading(false);
+      },
+      (message) => {
+        setErrorMessage(message);
+        setIsLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Leaderboard</Text>
+        <Text style={styles.bodyText}>
+          Team scores update automatically from Firestore.
+        </Text>
 
-        {MOCK_TEAMS.map((team) => (
-          <View
-            key={team.rank}
-            style={[styles.row, team.rank === 1 && styles.rowFirst]}
-          >
+        {isLoading && (
+          <View style={styles.messageCard}>
+            <ActivityIndicator />
+            <Text style={styles.messageText}>Loading leaderboard...</Text>
+          </View>
+        )}
+
+        {!isLoading && errorMessage.length > 0 && (
+          <View style={styles.messageCard}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
+
+        {!isLoading && errorMessage.length === 0 && teams.length === 0 && (
+          <View style={styles.messageCard}>
+            <Text style={styles.messageText}>No teams found yet.</Text>
+          </View>
+        )}
+
+        {!isLoading &&
+          errorMessage.length === 0 &&
+          teams.map((team) => (
             <View
-              style={[
-                styles.rankBadge,
-                team.rank === 1 && styles.rankBadgeFirst,
-              ]}
+              key={team.id}
+              style={[styles.row, team.rank === 1 && styles.rowFirst]}
             >
-              <Text
+              <View
                 style={[
-                  styles.rankText,
-                  team.rank === 1 && styles.rankTextFirst,
+                  styles.rankBadge,
+                  team.rank === 1 && styles.rankBadgeFirst,
                 ]}
               >
-                #{team.rank}
-              </Text>
+                <Text
+                  style={[
+                    styles.rankText,
+                    team.rank === 1 && styles.rankTextFirst,
+                  ]}
+                >
+                  #{team.rank}
+                </Text>
+              </View>
+
+              <View style={styles.teamInfo}>
+                <Text style={styles.teamName}>{team.teamName}</Text>
+                <Text style={styles.teamSubText}>Grade: {team.grade}</Text>
+                <Text style={styles.teamSubText}>
+                  Badges: {team.badgeCount}
+                </Text>
+              </View>
+
+              <View style={styles.scoreBox}>
+                <Text style={styles.scoreText}>{team.totalScore}</Text>
+                <Text style={styles.scoreLabel}>points</Text>
+              </View>
             </View>
-            <View style={styles.teamInfo}>
-              <Text style={styles.teamName}>{team.name}</Text>
-              <Text style={styles.teamPoints}>{team.points} points</Text>
-            </View>
-          </View>
-        ))}
+          ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -59,8 +114,32 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    marginBottom: 16,
+    marginBottom: 8,
     color: "#0f172a",
+  },
+  bodyText: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 12,
+    color: "#334155",
+  },
+  messageCard: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginTop: 8,
+    gap: 8,
+  },
+  messageText: {
+    fontSize: 15,
+    color: "#334155",
+  },
+  errorText: {
+    fontSize: 15,
+    color: "#dc2626",
+    fontWeight: "700",
   },
   row: {
     flexDirection: "row",
@@ -104,8 +183,20 @@ const styles = StyleSheet.create({
     color: "#0f172a",
     marginBottom: 2,
   },
-  teamPoints: {
-    fontSize: 14,
+  teamSubText: {
+    fontSize: 13,
+    color: "#64748b",
+  },
+  scoreBox: {
+    alignItems: "flex-end",
+  },
+  scoreText: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#2563eb",
+  },
+  scoreLabel: {
+    fontSize: 12,
     color: "#64748b",
   },
 });
