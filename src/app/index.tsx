@@ -143,6 +143,12 @@ export default function TeamSetupScreen() {
           >
             <Text style={styles.buttonText}>Create Team</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+           style={styles.secondaryButton}
+           onPress={() => router.push("/login")}
+         >
+           <Text style={styles.secondaryButtonText}>Already have a team? Login</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -193,5 +199,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 10,
   },
+  secondaryButton: {
+    width: "100%",
+    backgroundColor: "#ffffff",
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#2563eb",
+  },
   buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "800" },
+  secondaryButtonText: {
+    color: "#2563eb",
+    fontSize: 16,
+    fontWeight: "800",
+  },
 });
