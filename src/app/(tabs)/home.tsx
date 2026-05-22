@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -15,7 +16,7 @@ import { useTeam } from "../../../context/TeamContext";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { teamName, grade, teamId } = useTeam();
+  const { teamName, grade, teamId, rank, score } = useTeam();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -24,40 +25,56 @@ export default function HomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>STEMM Lab</Text>
-          <Text style={styles.subtitle}>Welcome, {teamName || "Team"}</Text>
-          <Text style={styles.bodyText}>Grade/Year: {grade || "Not set"}</Text>
+          <Text style={styles.title}>Side Quest</Text>
+          <Text style={styles.subtitle}>Welcome,</Text>
           <Text style={styles.smallText}>
             Team ID: {teamId || "Not saved yet"}
           </Text>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Team Progress</Text>
-            <Text style={styles.cardText}>Score: 0 points</Text>
-            <Text style={styles.cardText}>Completed activities: 0 / 7</Text>
-            <Text style={styles.cardText}>Badges: 0</Text>
+            <View style={styles.cardTextGroup}>
+              <Text
+                style={[styles.cardTitle, { fontSize: 24, marginBottom: 25 }]}
+              >
+                {teamName || "Team"} {rank ? `#${rank}` : "#unranked"}
+              </Text>
+              <Text style={[styles.cardTitle, { fontSize: 20 }]}>
+                Score : {score} points
+              </Text>
+              <Text style={styles.cardText}>Grade : {grade}</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => router.push("../(tabs)/home")}
+              activeOpacity={0.5}
+              hitSlop={{ top: 55, bottom: 55, left: 0, right: 14 }}
+            >
+              <Text style={styles.iconPlaceholder}>
+                <AntDesign name="right" size={24} color="black" />
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => router.push("../(tabs)/activities")}
-          >
-            <Text style={styles.buttonText}>View Activities</Text>
-          </TouchableOpacity>
+          <View style={[styles.card, { alignItems: "flex-start" }]}>
+            <View style={styles.cardTextGroup}>
+              <Text style={styles.cardTitle}>Recent</Text>
+            </View>
+          </View>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("../(tabs)/leaderboard")}
+          <View
+            style={[
+              styles.card,
+              {
+                height: 312,
+                marginBottom: 0,
+                alignItems: "flex-start",
+              },
+            ]}
           >
-            <Text style={styles.secondaryButtonText}>Leaderboard</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("/")}
-          >
-            <Text style={styles.secondaryButtonText}>Edit Team Setup</Text>
-          </TouchableOpacity>
+            <View style={styles.cardTextGroup}>
+              <Text style={styles.cardTitle}>Upcoming challenges</Text>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -71,18 +88,19 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 28,
+    paddingBottom: 12,
   },
   title: {
     fontSize: 28,
     fontWeight: "800",
-    marginBottom: 8,
+    marginBottom: 12,
     color: "#0f172a",
   },
   subtitle: {
     fontSize: 20,
     fontWeight: "700",
-    marginBottom: 12,
+    marginBottom: 4,
+    marginTop: 4,
     color: "#1e293b",
   },
   bodyText: {
@@ -94,25 +112,47 @@ const styles = StyleSheet.create({
   smallText: {
     fontSize: 13,
     lineHeight: 18,
-    marginBottom: 12,
+    marginBottom: 1,
     color: "#64748b",
   },
   card: {
     width: "100%",
     backgroundColor: "#ffffff",
+    height: 145,
     padding: 16,
+    paddingTop: 14,
     borderRadius: 14,
     marginVertical: 8,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "800",
-    marginBottom: 6,
+    marginBottom: 12,
     color: "#0f172a",
   },
-  cardText: { fontSize: 15, lineHeight: 21, color: "#1f2937" },
+  cardText: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: "#1f2937",
+    marginBottom: 3,
+  },
+  cardTextGroup: {
+    flexDirection: "column",
+    flex: 1,
+  },
+  iconPlaceholder: {
+    fontSize: 32,
+    marginLeft: 16,
+  },
   primaryButton: {
     width: "100%",
     backgroundColor: "#2563eb",
