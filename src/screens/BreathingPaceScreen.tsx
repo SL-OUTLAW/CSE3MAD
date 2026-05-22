@@ -1,8 +1,9 @@
 import { Accelerometer } from "expo-sensors";
 import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
+import { calculateBreathingMovement } from "../services/physicsCalculationService";
 type BreathingPaceScreenProps = {
+
   onBack: () => void;
 };
 
@@ -36,15 +37,14 @@ export default function BreathingPaceScreen({
       Accelerometer.setUpdateInterval(500);
 
       subscription = Accelerometer.addListener(({ x, y, z }) => {
-        const totalMovement = Math.sqrt(x * x + y * y + z * z);
-        setMovement(Number(totalMovement.toFixed(3)));
+        calculateBreathingMovement({ x, y, z }, lastPeakTime).then((result) => {
+          setMovement(result.movement);
 
-        const now = Date.now();
-
-        if (totalMovement > 1.08 && now - lastPeakTime > 2500) {
-          setBreathCount((current) => current + 1);
-          setLastPeakTime(now);
-        }
+          if (result.isBreathPeak) {
+            setBreathCount((current) => current + 1);
+            setLastPeakTime(Date.now());
+          }
+        });
       });
     }
 

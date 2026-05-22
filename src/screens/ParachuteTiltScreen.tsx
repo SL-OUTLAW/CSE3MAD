@@ -1,6 +1,7 @@
 import { Gyroscope } from "expo-sensors";
 import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { calculateParachuteTilt } from "../services/physicsCalculationService";
 
 type ParachuteTiltScreenProps = {
   onBack: () => void;
@@ -37,24 +38,12 @@ export default function ParachuteTiltScreen({
       Gyroscope.setUpdateInterval(500);
 
       subscription = Gyroscope.addListener(({ x, y, z }) => {
-        const xValue = Number(x.toFixed(3));
-        const yValue = Number(y.toFixed(3));
-        const zValue = Number(z.toFixed(3));
-
-        setXRotation(xValue);
-        setYRotation(yValue);
-        setZRotation(zValue);
-
-        const totalTilt =
-          Math.abs(xValue) + Math.abs(yValue) + Math.abs(zValue);
-
-        if (totalTilt < 0.3) {
-          setTiltStatus("Stable drop");
-        } else if (totalTilt < 1.0) {
-          setTiltStatus("Moderate tilt");
-        } else {
-          setTiltStatus("High tilt detected");
-        }
+        calculateParachuteTilt({ x, y, z }).then((result) => {
+          setXRotation(result.xRotation);
+          setYRotation(result.yRotation);
+          setZRotation(result.zRotation);
+          setTiltStatus(result.tiltStatus);
+        });
       });
     }
 
