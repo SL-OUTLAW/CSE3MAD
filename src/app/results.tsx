@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { db } from "../services/firebase";
+import { calculateActivityResult } from "../services/activityResultLogicService";
 import { useTeam } from "../../context/TeamContext";
 
 export default function ResultsScreen() {
@@ -35,6 +36,12 @@ export default function ResultsScreen() {
     }
 
     try {
+      const resultLogic = calculateActivityResult(
+        activityId,
+        measuredValue.trim(),
+        rating.trim()
+      );
+
       await addDoc(collection(db, "results"), {
         teamId,
         activityId,
@@ -42,12 +49,17 @@ export default function ResultsScreen() {
         measuredValue: measuredValue.trim(),
         rating: rating.trim(),
         comment: comment.trim(),
+        calculatedScore: resultLogic.score,
+        feedback: resultLogic.feedback,
+        performanceLevel: resultLogic.performanceLevel,
         submittedAt: serverTimestamp(),
       });
 
-      Alert.alert("Saved", "Result saved successfully!", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      Alert.alert(
+        "Saved",
+        `Result saved successfully!\nScore: ${resultLogic.score}\nLevel: ${resultLogic.performanceLevel}`,
+        [{ text: "OK", onPress: () => router.back() }]
+      );
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Could not save result. Check Firestore.");
