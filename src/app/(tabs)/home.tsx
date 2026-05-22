@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -15,7 +16,7 @@ import { useTeam } from "../../../context/TeamContext";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { teamName, grade, teamId } = useTeam();
+  const { teamName, grade, teamId, rank } = useTeam();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -24,18 +25,31 @@ export default function HomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>STEMM Lab</Text>
-          <Text style={styles.subtitle}>Welcome, {teamName || "Team"}</Text>
-          <Text style={styles.bodyText}>Grade/Year: {grade || "Not set"}</Text>
+          <Text style={styles.title}>Side Quest</Text>
+          <Text style={styles.subtitle}>Welcome,</Text>
           <Text style={styles.smallText}>
             Team ID: {teamId || "Not saved yet"}
           </Text>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Team Progress</Text>
-            <Text style={styles.cardText}>Score: 0 points</Text>
-            <Text style={styles.cardText}>Completed activities: 0 / 7</Text>
-            <Text style={styles.cardText}>Badges: 0</Text>
+            <View style={styles.cardTextGroup}>
+              <Text style={styles.cardTitle}>
+                {teamName || "Team"} {rank ? `#${rank}` : "#unranked"}
+              </Text>
+              <Text style={styles.cardText}>Score: 0 points</Text>
+              <Text style={styles.cardText}>Completed activities: 0 / 7</Text>
+              <Text style={styles.cardText}>Badges: 0</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => router.push("../(tabs)/home")}
+              activeOpacity={0.5}
+              hitSlop={{ top: 55, bottom: 55, left: 0, right: 14 }}
+            >
+              <Text style={styles.iconPlaceholder}>
+                <AntDesign name="right" size={24} color="black" />
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -76,13 +90,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "800",
-    marginBottom: 8,
+    marginBottom: 12,
     color: "#0f172a",
   },
   subtitle: {
     fontSize: 20,
     fontWeight: "700",
-    marginBottom: 12,
+    marginBottom: 4,
+    marginTop: 4,
     color: "#1e293b",
   },
   bodyText: {
@@ -94,25 +109,48 @@ const styles = StyleSheet.create({
   smallText: {
     fontSize: 13,
     lineHeight: 18,
-    marginBottom: 12,
+    marginBottom: 1,
     color: "#64748b",
   },
   card: {
     width: "100%",
     backgroundColor: "#ffffff",
+    height: 135,
     padding: 16,
+    paddingTop: 14,
     borderRadius: 14,
     marginVertical: 8,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "800",
-    marginBottom: 6,
+    marginBottom: 12,
     color: "#0f172a",
   },
-  cardText: { fontSize: 15, lineHeight: 21, color: "#1f2937" },
+  cardText: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: "#1f2937",
+    marginBottom: 3,
+  },
+  cardTextGroup: {
+    flexDirection: "column",
+    flex: 1,
+  },
+  iconPlaceholder: {
+    fontSize: 32,
+    marginLeft: 16,
+  },
   primaryButton: {
     width: "100%",
     backgroundColor: "#2563eb",

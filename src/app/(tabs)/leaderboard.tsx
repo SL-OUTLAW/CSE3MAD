@@ -8,31 +8,37 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useTeam } from "../../../context/TeamContext";
 import {
   LeaderboardTeam,
   listenToLeaderboard,
 } from "../../services/leaderboardService";
 
 export default function LeaderboardScreen() {
+  const { teamId, setRank } = useTeam();
   const [teams, setTeams] = useState<LeaderboardTeam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const unsubscribe = listenToLeaderboard(
+      teamId,
       (leaderboardTeams) => {
         setTeams(leaderboardTeams);
         setErrorMessage("");
         setIsLoading(false);
       },
+      (rank) => {
+        setRank(rank);
+      },
       (message) => {
         setErrorMessage(message);
         setIsLoading(false);
-      }
+      },
     );
 
     return unsubscribe;
-  }, []);
+  }, [teamId, setRank]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
