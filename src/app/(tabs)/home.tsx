@@ -44,20 +44,6 @@ export default function HomeScreen() {
           >
             <Text style={styles.buttonText}>View Activities</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("../(tabs)/leaderboard")}
-          >
-            <Text style={styles.secondaryButtonText}>Leaderboard</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.push("/")}
-          >
-            <Text style={styles.secondaryButtonText}>Edit Team Setup</Text>
-          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
