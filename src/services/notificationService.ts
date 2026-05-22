@@ -3,6 +3,8 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
+const isExpoGo = Constants.appOwnership === "expo";
+
 export type PushRegistrationResult = {
   token: string | null;
   status: "granted" | "denied" | "unavailable" | "error";
@@ -50,6 +52,14 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
       message: "Notification permission was not granted.",
     };
   }
+  
+  if (Platform.OS === "android" && isExpoGo) {
+  return {
+    token: null,
+    status: "unavailable",
+    message: "Remote push notifications require a development build on Android.",
+  };
+}
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
