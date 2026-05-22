@@ -83,10 +83,7 @@ export default function TeamSetupScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -144,10 +141,12 @@ export default function TeamSetupScreen() {
             <Text style={styles.buttonText}>Create Team</Text>
           </TouchableOpacity>
           <TouchableOpacity
-           style={styles.secondaryButton}
-           onPress={() => router.push("/login")}
-         >
-           <Text style={styles.secondaryButtonText}>Already have a team? Login</Text>
+            style={styles.secondaryButton}
+            onPress={() => router.push("/login")}
+          >
+            <Text style={styles.secondaryButtonText}>
+              Already have a team? Login
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

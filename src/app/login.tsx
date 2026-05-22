@@ -35,7 +35,7 @@ export default function LoginScreen() {
       const teamQuery = query(
         collection(db, "teams"),
         where("userId", "==", user.uid),
-        limit(1)
+        limit(1),
       );
 
       const teamSnapshot = await getDocs(teamQuery);
@@ -51,21 +51,18 @@ export default function LoginScreen() {
 
       Alert.alert("Login successful", "Welcome back.", [
         { text: "OK", onPress: () => router.replace("../(tabs)/home") },
-     ]);
-   } catch {
-     Alert.alert(
-       "Login failed",
-       "Could not log in. Please check your email and password."
-    );
-  }
-};
+      ]);
+    } catch {
+      Alert.alert(
+        "Login failed",
+        "Could not log in. Please check your email and password.",
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
