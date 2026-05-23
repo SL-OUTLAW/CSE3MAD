@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { calculateBreathingMovement } from "../services/physicsCalculationService";
 type BreathingPaceScreenProps = {
-
   onBack: () => void;
 };
 
@@ -118,7 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "800",
     marginBottom: 8,
-    color: "#0f172a",
+    color: "#000000",
   },
   description: {
     fontSize: 16,

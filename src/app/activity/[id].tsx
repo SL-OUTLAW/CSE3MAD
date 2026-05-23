@@ -40,7 +40,7 @@ export default function ActivityDetailScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <TouchableOpacity
@@ -53,15 +53,6 @@ export default function ActivityDetailScreen() {
           <Text style={styles.title}>{activity.title}</Text>
           <Text style={styles.category}>{activity.category}</Text>
           <Text style={styles.bodyText}>{activity.description}</Text>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Activity Tools</Text>
-            {activity.tools.map((tool) => (
-              <Text key={tool} style={styles.cardText}>
-                • {tool}
-              </Text>
-            ))}
-          </View>
 
           {"equipment" in activity && activity.equipment && (
             <View style={styles.card}>
@@ -85,23 +76,21 @@ export default function ActivityDetailScreen() {
             </View>
           )}
 
-          {"diagramNotes" in activity && activity.diagramNotes && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Diagram Notes</Text>
-              {activity.diagramNotes.map((note) => (
-                <Text key={note} style={styles.cardText}>
-                  • {note}
-                </Text>
-              ))}
-            </View>
-          )}
-
           {activity.id === "A1" && (
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() => router.push("/activity-screens/parachute-tilt")}
             >
               <Text style={styles.buttonText}>Open Tilt Detector</Text>
+            </TouchableOpacity>
+          )}
+
+          {activity.id === "A4" && (
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push("../activity-screens/earthquake-vibration")}
+            >
+              <Text style={styles.buttonText}>Start Activity</Text>
             </TouchableOpacity>
           )}
 

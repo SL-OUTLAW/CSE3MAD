@@ -17,6 +17,11 @@ export type TiltCalculationResult = {
   tiltStatus: string;
 };
 
+export type EarthquakeCalculationResult = {
+  accelMagnitude: number;
+  seismicStatus: string;
+};
+
 function runCalculation<T>(calculation: () => T): Promise<T> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -27,11 +32,11 @@ function runCalculation<T>(calculation: () => T): Promise<T> {
 
 export function calculateBreathingMovement(
   reading: MotionReading,
-  lastPeakTime: number
+  lastPeakTime: number,
 ): Promise<BreathingCalculationResult> {
   return runCalculation(() => {
     const totalMovement = Math.sqrt(
-      reading.x * reading.x + reading.y * reading.y + reading.z * reading.z
+      reading.x * reading.x + reading.y * reading.y + reading.z * reading.z,
     );
 
     const now = Date.now();
@@ -45,7 +50,7 @@ export function calculateBreathingMovement(
 }
 
 export function calculateParachuteTilt(
-  reading: MotionReading
+  reading: MotionReading,
 ): Promise<TiltCalculationResult> {
   return runCalculation(() => {
     const xRotation = Number(reading.x.toFixed(3));
@@ -69,6 +74,33 @@ export function calculateParachuteTilt(
       zRotation,
       totalTilt,
       tiltStatus,
+    };
+  });
+}
+
+export function calculateSeismicVibration(
+  reading: MotionReading,
+): Promise<EarthquakeCalculationResult> {
+  return runCalculation(() => {
+    const magnitude = Math.sqrt(
+      reading.x * reading.x + reading.y * reading.y + reading.z * reading.z,
+    );
+
+    const netForce = Math.abs(magnitude - 1.0);
+    const accelMagnitude = Number(netForce.toFixed(2));
+
+    let seismicStatus = "SENSOR ACTIVE";
+    if (accelMagnitude > 0.8) {
+      seismicStatus = "SEVERE VIBRATION";
+    } else if (accelMagnitude > 0.3) {
+      seismicStatus = "MODERATE VIBRATION";
+    } else if (accelMagnitude > 0.05) {
+      seismicStatus = "LIGHT VIBRATION";
+    }
+
+    return {
+      accelMagnitude,
+      seismicStatus,
     };
   });
 }
