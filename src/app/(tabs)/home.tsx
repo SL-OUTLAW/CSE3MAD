@@ -45,7 +45,7 @@ export default function HomeScreen() {
             </View>
 
             <TouchableOpacity
-              onPress={() => router.push("../(tabs)/home")}
+              onPress={() => router.push("../team-profile")}
               activeOpacity={0.5}
               hitSlop={{ top: 55, bottom: 55, left: 0, right: 14 }}
             >
