@@ -19,7 +19,7 @@ import { db, loginWithEmail } from "../services/firebase";
 export default function LoginScreen() {
   const router = useRouter();
 
-  const { setTeamName, setGrade, setTeamId } = useTeam();
+  const { setTeamName, setGrade, setTeamId, setTeamMembers } = useTeam();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -43,10 +43,12 @@ export default function LoginScreen() {
       if (!teamSnapshot.empty) {
         const teamDoc = teamSnapshot.docs[0];
         const teamData = teamDoc.data();
+        const members = Array.isArray(teamData.members) ? teamData.members : [];
 
         setTeamId(teamDoc.id);
         setTeamName(String(teamData.teamName ?? ""));
         setGrade(String(teamData.grade ?? ""));
+        setTeamMembers(members);
       }
 
       Alert.alert("Login successful", "Welcome back.", [
