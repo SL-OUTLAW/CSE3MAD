@@ -38,10 +38,7 @@ export default function ActivityDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior="padding"
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <TouchableOpacity
             style={styles.backButton}
@@ -88,7 +85,20 @@ export default function ActivityDetailScreen() {
           {activity.id === "A4" && (
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => router.push("../activity-screens/earthquake-vibration")}
+              onPress={() =>
+                router.push("../activity-screens/earthquake-vibration")
+              }
+            >
+              <Text style={styles.buttonText}>Start Activity</Text>
+            </TouchableOpacity>
+          )}
+
+          {activity.id === "A5" && (
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() =>
+                router.push("../activity-screens/human-performance")
+              }
             >
               <Text style={styles.buttonText}>Start Activity</Text>
             </TouchableOpacity>
