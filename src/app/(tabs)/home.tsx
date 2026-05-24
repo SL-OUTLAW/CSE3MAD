@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -7,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -43,16 +41,6 @@ export default function HomeScreen() {
               </Text>
               <Text style={styles.cardText}>Grade : {grade}</Text>
             </View>
-
-            <TouchableOpacity
-              onPress={() => router.push("../team-profile")}
-              activeOpacity={0.5}
-              hitSlop={{ top: 55, bottom: 55, left: 0, right: 14 }}
-            >
-              <Text style={styles.iconPlaceholder}>
-                <AntDesign name="right" size={24} color="black" />
-              </Text>
-            </TouchableOpacity>
           </View>
 
           <View style={[styles.card, { alignItems: "flex-start" }]}>
@@ -148,10 +136,6 @@ const styles = StyleSheet.create({
   cardTextGroup: {
     flexDirection: "column",
     flex: 1,
-  },
-  iconPlaceholder: {
-    fontSize: 32,
-    marginLeft: 16,
   },
   primaryButton: {
     width: "100%",

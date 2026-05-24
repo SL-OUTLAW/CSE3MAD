@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MENU_ITEMS = [
-  { label: "Team", route: "/team-edit" },
+  { label: "Team", route: "/team-profile" },
   { label: "Settings", route: null },
   { label: "Help", route: null },
   { label: "Sign out", route: null },
