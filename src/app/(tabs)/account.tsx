@@ -8,9 +8,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTeam } from "../../../context/TeamContext";
 
 const MENU_ITEMS = [
-  { label: "Team", route: null },
+  { label: "Team", route: "../team-profile" },
   { label: "Settings", route: null },
   { label: "Help", route: null },
   { label: "Sign out", route: null },
@@ -18,6 +19,11 @@ const MENU_ITEMS = [
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { teamName, grade } = useTeam();
+
+  const displayTeamName = teamName || "Team Name";
+  const displayGrade = grade || "Not set";
+  const avatarLetter = displayTeamName.charAt(0).toUpperCase();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -26,11 +32,11 @@ export default function AccountScreen() {
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>T</Text>
+            <Text style={styles.avatarText}>{avatarLetter}</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Team Name</Text>
-            <Text style={styles.profileSub}>Grade: Not set</Text>
+            <Text style={styles.profileName}>{displayTeamName}</Text>
+            <Text style={styles.profileSub}>Grade: {displayGrade}</Text>
           </View>
         </View>
 
