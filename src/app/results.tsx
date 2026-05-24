@@ -28,6 +28,21 @@ export default function ResultsScreen() {
   const [measuredValue, setMeasuredValue] = useState("");
   const [rating, setRating] = useState("");
   const [comment, setComment] = useState("");
+  const getMeasuredValueLabel = () => {
+  if (activityId === "A1") {
+    return "Fall time in seconds";
+  }
+
+  if (activityId === "A2") {
+    return "Sound level in dB";
+  }
+
+  if (activityId === "A3") {
+    return "Bend angle in degrees";
+  }
+
+  return "Measured value";
+};
 
   const handleSubmit = async () => {
     if (!measuredValue.trim()) {
@@ -52,6 +67,7 @@ export default function ResultsScreen() {
         calculatedScore: resultLogic.score,
         feedback: resultLogic.feedback,
         performanceLevel: resultLogic.performanceLevel,
+        calculationData: resultLogic.calculationData,
         submittedAt: serverTimestamp(),
       });
 
@@ -90,7 +106,7 @@ export default function ResultsScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Measured value"
+            placeholder={getMeasuredValueLabel()}
             value={measuredValue}
             onChangeText={setMeasuredValue}
             placeholderTextColor="#94a3b8"
