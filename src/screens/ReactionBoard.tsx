@@ -18,7 +18,7 @@ type ReactionBoardScreenProps = {
 };
 
 const TRACE_RADIUS = 100;
-const TOLERANCE = 28; // px band around the circle that counts as "on track"
+const TOLERANCE = 28;
 
 type Phase = "phase1" | "phase2" | "phase3";
 type TapState = "idle" | "waiting" | "ready" | "tapped" | "toosoon";
@@ -35,11 +35,6 @@ type TracingAttempt = {
   durationMs: number;
 };
 
-// ─────────────────────────────────────────────
-// TraceCanvas - completely self-contained SVG drawing component.
-// Uses pageX/pageY + measured canvas origin so touch coords are always
-// relative to this exact view, even when the finger leaves its bounds.
-// ─────────────────────────────────────────────
 type TraceCanvasProps = {
   active: boolean;
   dotAngle: number;
@@ -58,7 +53,6 @@ function TraceCanvas({
   const [renderPath, setRenderPath] = useState<Point[]>([]);
   const activeRef = useRef(active);
   const sizeRef = useRef(0);
-  // Absolute page position of the canvas view - measured after layout
   const canvasOriginRef = useRef<{ px: number; py: number }>({ px: 0, py: 0 });
   const viewRef = useRef<View>(null);
 
@@ -71,7 +65,6 @@ function TraceCanvas({
   const movingX = cx + TRACE_RADIUS * Math.cos((dotAngle * Math.PI) / 180);
   const movingY = cy + TRACE_RADIUS * Math.sin((dotAngle * Math.PI) / 180);
 
-  // Guide circle points
   const guidePoints: Point[] = Array.from({ length: 60 }, (_, i) => ({
     x: cx + TRACE_RADIUS * Math.cos(((i / 60) * 360 * Math.PI) / 180),
     y: cy + TRACE_RADIUS * Math.sin(((i / 60) * 360 * Math.PI) / 180),
@@ -81,7 +74,6 @@ function TraceCanvas({
     const s = e.nativeEvent.layout.width;
     setSize(s);
     sizeRef.current = s;
-    // Measure absolute page position so we can convert pageX/pageY → local coords
     viewRef.current?.measure((_x, _y, _w, _h, pageX, pageY) => {
       canvasOriginRef.current = { px: pageX, py: pageY };
     });
@@ -91,17 +83,14 @@ function TraceCanvas({
     PanResponder.create({
       onStartShouldSetPanResponder: () => activeRef.current,
       onMoveShouldSetPanResponder: () => activeRef.current,
-      // Capture so the ScrollView never steals the gesture mid-draw
       onStartShouldSetPanResponderCapture: () => activeRef.current,
       onMoveShouldSetPanResponderCapture: () => activeRef.current,
 
       onPanResponderGrant: (e) => {
         if (!activeRef.current) return;
         const s = sizeRef.current;
-        // Convert absolute page coords to canvas-local coords
         const x = e.nativeEvent.pageX - canvasOriginRef.current.px;
         const y = e.nativeEvent.pageY - canvasOriginRef.current.py;
-        // Reject if touch starts outside the canvas
         if (x < 0 || y < 0 || x > s || y > s) return;
         pathRef.current = [{ x, y }];
         setRenderPath([{ x, y }]);
@@ -111,10 +100,8 @@ function TraceCanvas({
       onPanResponderMove: (e) => {
         if (!activeRef.current) return;
         const s = sizeRef.current;
-        // Always convert from page coords - reliable even when finger leaves view
         const x = e.nativeEvent.pageX - canvasOriginRef.current.px;
         const y = e.nativeEvent.pageY - canvasOriginRef.current.py;
-        // Strictly drop any point outside the canvas bounds
         if (x < 0 || y < 0 || x > s || y > s) return;
         const next = [...pathRef.current, { x, y }];
         pathRef.current = next;
@@ -144,7 +131,6 @@ function TraceCanvas({
     >
       {size > 0 && (
         <Svg width={size} height={size}>
-          {/* Guide circle as individual small dots */}
           <G>
             {guidePoints
               .filter((_, i) => i % 3 === 0)
@@ -153,7 +139,6 @@ function TraceCanvas({
               ))}
           </G>
 
-          {/* User's drawn path as connected line segments */}
           {renderPath.length > 1 &&
             renderPath
               .slice(0, -1)
@@ -171,7 +156,6 @@ function TraceCanvas({
                 />
               ))}
 
-          {/* Moving red target dot */}
           {active && (
             <Circle
               cx={movingX}
@@ -312,7 +296,7 @@ export default function ReactionBoardScreen({
         ? "#dc2626"
         : tapState === "tapped"
           ? "#1d5db1"
-          : "#d3d3d3";
+          : "#eeeeee";
 
   const currentPhaseAttempts = reactionAttempts.filter(
     (a) => a.phase === phase,
@@ -334,7 +318,6 @@ export default function ReactionBoardScreen({
     >
       <View style={styles.phoneFrame}>
         <Text style={styles.headerTitle}>Reaction Board Challenge</Text>
-
         <View style={styles.phaseRow}>
           {(["phase1", "phase2", "phase3"] as Phase[]).map((p) => (
             <TouchableOpacity
@@ -368,7 +351,6 @@ export default function ReactionBoardScreen({
             </TouchableOpacity>
           ))}
         </View>
-
         {(phase === "phase1" || phase === "phase2") && (
           <>
             <View style={styles.sensorCard}>
@@ -456,7 +438,6 @@ export default function ReactionBoardScreen({
             )}
           </>
         )}
-
         {phase === "phase3" && (
           <>
             <View style={styles.sensorCard}>
@@ -488,7 +469,6 @@ export default function ReactionBoardScreen({
               </View>
             </View>
 
-            {/* TraceCanvas is fully self-contained - owns its own touch handling and SVG */}
             <TraceCanvas
               key={canvasKey}
               active={traceActive}
@@ -498,11 +478,11 @@ export default function ReactionBoardScreen({
             />
 
             <TouchableOpacity
-              style={styles.trackingButton}
+              style={[styles.trackingButton, { marginBottom: 50 }]}
               onPress={handleStartTrace}
             >
               <Text style={styles.trackingButtonText}>
-                {traceActive ? "Tracing..." : "Start Trace"}
+                {traceActive ? "Tracing" : "Start"}
               </Text>
             </TouchableOpacity>
 
@@ -522,41 +502,40 @@ export default function ReactionBoardScreen({
             )}
           </>
         )}
-
-        <View style={styles.sensorCard}>
-          <Text style={styles.cardHeader}>Hand Comparison</Text>
-          <View style={styles.metricsRow}>
-            <View style={styles.metricColumn}>
-              <Text style={styles.metricValue}>
-                {avgReaction(p1Attempts) || 0}ms
-              </Text>
-              <Text style={styles.metricLabel}>Dominant</Text>
-            </View>
-            <View style={styles.metricColumn}>
-              <Text style={styles.metricValue}>
-                {avgReaction(p2Attempts) || 0}ms
-              </Text>
-              <Text style={styles.metricLabel}>Non-Dominant</Text>
-            </View>
-            <View style={styles.metricColumn}>
-              <Text style={[styles.metricValue, { color: "#ee8003" }]}>
-                {Math.abs(
-                  avgReaction(p1Attempts)! - avgReaction(p2Attempts)!,
-                ) || 0}
-                ms
-              </Text>
-              <Text style={styles.metricLabel}>Difference</Text>
+        {(phase === "phase1" || phase === "phase2") && (
+          <View style={[styles.sensorCard, { marginBottom: 50 }]}>
+            <Text style={styles.cardHeader}>Hand Comparison</Text>
+            <View style={styles.metricsRow}>
+              <View style={styles.metricColumn}>
+                <Text style={styles.metricValue}>
+                  {avgReaction(p1Attempts) || 0}ms
+                </Text>
+                <Text style={styles.metricLabel}>Dominant</Text>
+              </View>
+              <View style={styles.metricColumn}>
+                <Text style={styles.metricValue}>
+                  {avgReaction(p2Attempts) || 0}ms
+                </Text>
+                <Text style={styles.metricLabel}>Non-Dominant</Text>
+              </View>
+              <View style={styles.metricColumn}>
+                <Text style={[styles.metricValue, { color: "#ee8003" }]}>
+                  {Math.abs(
+                    avgReaction(p1Attempts)! - avgReaction(p2Attempts)!,
+                  ) || 0}
+                  ms
+                </Text>
+                <Text style={styles.metricLabel}>Difference</Text>
+              </View>
             </View>
           </View>
-        </View>
-
+        )}
         <TouchableOpacity style={styles.logButton}>
           <View style={styles.logButtonContent}>
             <Text style={styles.logButtonText}>Log Results</Text>
             <Text style={styles.arrowIcon}>➔</Text>
           </View>
         </TouchableOpacity>
-
         <View style={styles.bottomRow}>
           <TouchableOpacity style={styles.quitButton} onPress={onBack}>
             <Text style={styles.bottomButtonText}>Quit</Text>
@@ -668,13 +647,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   reactionButton: {
-    height: 300,
+    height: 371,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: "#000000",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+    shadowColor: "#000000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   reactionButtonText: {
     fontSize: 36,
@@ -685,11 +668,15 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 1,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#000000",
     borderRadius: 24,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#eeeeee",
     marginBottom: 20,
     overflow: "hidden",
+    shadowColor: "#000000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   attemptRow: {
     flexDirection: "row",
@@ -725,7 +712,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 50,
+    marginBottom: 20,
   },
   trackingButtonText: {
     color: "#ffffff",
