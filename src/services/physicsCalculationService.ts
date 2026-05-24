@@ -104,3 +104,39 @@ export function calculateSeismicVibration(
     };
   });
 }
+
+export type ReactionCalculationResult = {
+  reactionTimeMs: number;
+  reactionStatus: string;
+  accuracyPercent: number;
+  durationMs: number;
+  traceStatus: string;
+};
+ 
+export function calculateReactionResult(
+  input: Partial<{ reactionTimeMs: number; accuracyPercent: number; durationMs: number }>,
+): Promise<ReactionCalculationResult> {
+  return runCalculation(() => {
+    const reactionTimeMs = input.reactionTimeMs ?? 0;
+    const accuracyPercent = input.accuracyPercent ?? 0;
+    const durationMs = input.durationMs ?? 0;
+ 
+    let reactionStatus = "RECORDED";
+    if (reactionTimeMs > 0) {
+      if (reactionTimeMs < 200) reactionStatus = "EXCELLENT";
+      else if (reactionTimeMs < 300) reactionStatus = "GOOD";
+      else if (reactionTimeMs < 500) reactionStatus = "AVERAGE";
+      else reactionStatus = "SLOW";
+    }
+ 
+    let traceStatus = "RECORDED";
+    if (accuracyPercent > 0) {
+      if (accuracyPercent >= 80) traceStatus = "EXCELLENT";
+      else if (accuracyPercent >= 60) traceStatus = "GOOD";
+      else if (accuracyPercent >= 40) traceStatus = "FAIR";
+      else traceStatus = "POOR";
+    }
+ 
+    return { reactionTimeMs, reactionStatus, accuracyPercent, durationMs, traceStatus };
+  });
+}

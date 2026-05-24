@@ -403,8 +403,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   movementButtonActive: {
-    borderColor: "#16a34a",
-    backgroundColor: "#f0fdf4",
+    borderColor: "#1d5db1",
+    backgroundColor: "#eff6ff",
   },
   movementButtonText: {
     fontSize: 14,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   movementButtonTextActive: {
-    color: "#16a34a",
+    color: "#1d5db1",
   },
   movementDesc: {
     fontSize: 10,
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   movementDescActive: {
-    color: "#16a34a",
+    color: "#1d5db1",
   },
   metricsRow: {
     flexDirection: "row",

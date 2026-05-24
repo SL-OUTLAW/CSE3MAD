@@ -103,6 +103,16 @@ export default function ActivityDetailScreen() {
               <Text style={styles.buttonText}>Start Activity</Text>
             </TouchableOpacity>
           )}
+          {activity.id === "A6" && (
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() =>
+                router.push("../activity-screens/reaction-board")
+              }
+            >
+              <Text style={styles.buttonText}>Start Activity</Text>
+            </TouchableOpacity>
+          )}
 
           {activity.id === "A7" && (
             <TouchableOpacity
