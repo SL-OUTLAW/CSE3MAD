@@ -1,4 +1,3 @@
-import { syncResult } from "../services/resultSyncService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,18 +11,29 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { syncResult } from "../services/resultSyncService";
 
 import { useTeam } from "../../context/TeamContext";
 
 export default function ResultsScreen() {
-  const router = useRouter();
-  const { activityId, activityTitle } = useLocalSearchParams<{
-    activityId: string;
-    activityTitle: string;
-  }>();
-  const { teamId } = useTeam();
+const router = useRouter();
+const params = useLocalSearchParams();
+const { teamId } = useTeam();
 
-  const [measuredValue, setMeasuredValue] = useState("");
+const getParam = (key: string) => {
+  const value = params[key];
+
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+
+  return typeof value === "string" ? value : "";
+};
+
+const activityId = getParam("activityId");
+const activityTitle = getParam("activityTitle");
+
+  const [measuredValue, setMeasuredValue] = useState(getParam("defaultMeasuredValue"));
   const [rating, setRating] = useState("");
   const [comment, setComment] = useState("");
 
@@ -34,14 +44,82 @@ export default function ResultsScreen() {
     }
 
     try {
-      await syncResult({
-        teamId,
-        activityId,
-        activityTitle,
-        measuredValue,
-        rating,
-        comment,
-      });
+      const numericValue = Number(measuredValue);
+const numericRating = Number(rating);
+
+const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+const safeRating = Number.isFinite(numericRating) ? numericRating : 0;
+
+const calculatedScore = Math.min(100, Math.round(safeValue + safeRating * 10));
+
+const performanceLevel =
+  calculatedScore >= 80
+    ? "Excellent"
+    : calculatedScore >= 50
+      ? "Good"
+      : "Needs improvement";
+
+const feedback =
+  activityId === "A1"
+    ? "Parachute result saved with fall time, force, drag, and g-force calculations."
+    : activityId === "A2"
+      ? "Sound result saved with microphone dB, peak dB, and risk level."
+      : activityId === "A3"
+        ? "Hand fan result saved with bend angle, material stiffness, and force estimate."
+        : "Result saved.";
+
+const calculationData: Record<string, string | number | boolean> =
+  activityId === "A1"
+    ? {
+        attempt: getParam("attempt"),
+        dropHeightM: getParam("dropHeightM"),
+        toyMassKg: getParam("toyMassKg"),
+        designNotes: getParam("designNotes"),
+        fallTimeSeconds: getParam("fallTimeSeconds"),
+        stopTimeSeconds: getParam("stopTimeSeconds"),
+        finalVelocityMs: getParam("finalVelocityMs"),
+        accelerationMs2: getParam("accelerationMs2"),
+        weightForceN: getParam("weightForceN"),
+        netForceN: getParam("netForceN"),
+        dragForceN: getParam("dragForceN"),
+        gForce: getParam("gForce"),
+        videoAttached: getParam("videoAttached"),
+      }
+    : activityId === "A2"
+      ? {
+          currentDb: getParam("currentDb"),
+          peakDb: getParam("peakDb"),
+          riskLevel: getParam("riskLevel"),
+          soundDescription: getParam("soundDescription"),
+        }
+      : activityId === "A3"
+        ? {
+            distanceCm: getParam("distanceCm"),
+            material: getParam("material"),
+            fanDesign: getParam("fanDesign"),
+            prediction: getParam("prediction"),
+            bendAngleDeg: getParam("bendAngleDeg"),
+            bendAngleRad: getParam("bendAngleRad"),
+            stiffnessNPerRad: getParam("stiffnessNPerRad"),
+            estimatedForceN: getParam("estimatedForceN"),
+            movementLevel: getParam("movementLevel"),
+            observation: getParam("observation"),
+            videoAttached: getParam("videoAttached"),
+          }
+        : {};
+
+await syncResult({
+  teamId,
+  activityId,
+  activityTitle,
+  measuredValue,
+  rating,
+  comment,
+  calculatedScore,
+  performanceLevel,
+  feedback,
+  calculationData,
+});
 
       Alert.alert("Saved", "Result saved successfully!", [
         { text: "OK", onPress: () => router.back() },
