@@ -1,4 +1,5 @@
 import { collection, onSnapshot } from "firebase/firestore";
+import * as Notifications from "expo-notifications";
 import { Alert } from "react-native";
 import { db } from "./firebase";
 
@@ -11,6 +12,34 @@ type UpcomingChallengeData = {
 };
 
 const UPCOMING_CHALLENGES_COLLECTION = "upcomingChallenges";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+async function showUpcomingChallengeNotification(
+  title: string,
+  description: string
+) {
+  const permission = await Notifications.requestPermissionsAsync();
+
+  if (!permission.granted) {
+    return;
+  }
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "New Upcoming Challenge",
+      body: `${title}\n${description}`,
+    },
+    trigger: null,
+  });
+}
 
 export function startUpcomingChallengeListener() {
   let initialSnapshotLoaded = false;
@@ -40,6 +69,11 @@ export function startUpcomingChallengeListener() {
           data.description ||
           data.startTime ||
           "A new upcoming challenge has been added.";
+
+        void showUpcomingChallengeNotification(
+          challengeTitle,
+          challengeDescription
+        );
 
         Alert.alert(
           "New Upcoming Challenge",
