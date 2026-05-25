@@ -43,7 +43,7 @@ export default function EarthquakeDetectionScreen({
         return;
       }
 
-      Accelerometer.setUpdateInterval(200);
+      Accelerometer.setUpdateInterval(100);
 
       subscription = Accelerometer.addListener(({ x, y, z }) => {
         if (isTracking) {

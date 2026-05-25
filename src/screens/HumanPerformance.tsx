@@ -69,7 +69,7 @@ export default function HumanPerformanceLabScreen({
         return;
       }
 
-      Accelerometer.setUpdateInterval(200);
+      Accelerometer.setUpdateInterval(100);
 
       subscription = Accelerometer.addListener(({ x, y, z }) => {
         if (!isTracking) return;
@@ -246,11 +246,37 @@ export default function HumanPerformanceLabScreen({
           <Text
             style={[
               styles.cardHeader,
-              { fontSize: 14, color: "red", fontWeight: "700" },
+              {
+                fontSize: 14,
+                color: "red",
+                fontWeight: "700",
+                marginBottom: 5,
+              },
             ]}
           >
             Peak: {peakVibration.toFixed(2)}g
           </Text>
+          {attempts.length > 0 && (
+            <Text
+              style={[
+                styles.cardHeader,
+                { fontSize: 14, color: "red", fontWeight: "700" },
+              ]}
+            >
+              {attempts.map((a, idx) => {
+                return (
+                  <Text
+                    style={[
+                      styles.cardHeader,
+                      { fontSize: 14, color: "red", fontWeight: "700" },
+                    ]}
+                  >
+                    Average: {a.avgVibration.toFixed(2)}g
+                  </Text>
+                );
+              })}
+            </Text>
+          )}
 
           <LineChart
             data={{

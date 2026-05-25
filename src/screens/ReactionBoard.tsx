@@ -388,7 +388,7 @@ export default function ReactionBoardScreen({
 
             <TouchableOpacity
               onPress={tapState === "idle" ? undefined : handleTap}
-              activeOpacity={tapState === "idle" ? 1 : 0.85}
+              activeOpacity={1}
             >
               <View
                 style={[
