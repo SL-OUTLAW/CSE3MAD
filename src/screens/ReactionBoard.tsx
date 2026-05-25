@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { router, useLocalSearchParams, useRouter } from "expo-router";
+
 import {
   Animated,
   LayoutChangeEvent,
@@ -11,10 +13,20 @@ import {
 } from "react-native";
 import Svg, { Circle, G, Line } from "react-native-svg";
 import { calculateReactionResult } from "../services/physicsCalculationService";
+import {
+  loadDraft,
+  clearDraft,
+  saveResultOffline,
+  syncPendingResultsToFirebase,
+} from "../services/resultStorageService";
 
 type ReactionBoardScreenProps = {
   onBack: () => void;
+  onLogResults: () => void;
   onSubmit: () => void;
+  hasDraft?: boolean;
+  activityId?: string;
+  activityTitle?: string;
 };
 
 const TRACE_RADIUS = 100;
@@ -174,6 +186,8 @@ function TraceCanvas({
 export default function ReactionBoardScreen({
   onBack,
   onSubmit,
+  onLogResults,
+  hasDraft,
 }: ReactionBoardScreenProps) {
   const [phase, setPhase] = useState<Phase>("phase1");
 
@@ -530,7 +544,7 @@ export default function ReactionBoardScreen({
             </View>
           </View>
         )}
-        <TouchableOpacity style={styles.logButton}>
+        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
           <View style={styles.logButtonContent}>
             <Text style={styles.logButtonText}>Log Results</Text>
             <Text style={styles.arrowIcon}>➔</Text>

@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,19 +13,75 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { activities } from "../../data/activities";
+import { useTeam } from "../../../context/TeamContext";
+import {
+  loadDraft,
+  clearDraft,
+  saveResultOffline,
+  syncPendingResultsToFirebase,
+} from "../../services/resultStorageService";
 
 export default function ActivityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { teamId } = useTeam();
+  const [hasDraft, setHasDraft] = useState(false);
 
   const activity = activities.find((a) => a.id === id);
+
+  useEffect(() => {
+    if (!teamId || !id) return;
+    loadDraft(teamId, id).then((draft) => {
+      console.log(`[ActivityDetail] Draft exists: ${!!draft}`);
+      setHasDraft(!!draft);
+    });
+  }, [teamId, id]);
+
+  const handleFinalSubmit = async () => {
+    if (!teamId || !id) return;
+    const draft = await loadDraft(teamId, id);
+    if (!draft) {
+      Alert.alert(
+        "No draft",
+        "Please enter a result first using 'Enter Results'.",
+      );
+      return;
+    }
+    if (!draft.resultText.trim()) {
+      Alert.alert("Missing result", "Draft has no result text.");
+      return;
+    }
+
+    try {
+      await saveResultOffline({
+        teamId,
+        activityId: id,
+        activityTitle: activity?.title || "Unknown Activity",
+        resultText: draft.resultText,
+        rating: draft.rating,
+        comment: draft.comment,
+        attachments: draft.attachments,
+      });
+
+      await clearDraft(teamId, id);
+      setHasDraft(false);
+
+      syncPendingResultsToFirebase().catch((err) =>
+        console.warn("Background sync error", err),
+      );
+
+      Alert.alert("Success", "Result submitted successfully!");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Could not submit result.");
+    }
+  };
 
   if (!activity) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.scrollContent}>
           <Text style={styles.title}>Activity not found</Text>
-
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() => router.back()}
@@ -86,7 +143,13 @@ export default function ActivityDetailScreen() {
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() =>
-                router.push("../activity-screens/earthquake-vibration")
+                router.push({
+                  pathname: "../activity-screens/earthquake-vibration",
+                  params: {
+                    activityId: activity.id,
+                    activityTitle: activity.title,
+                  },
+                })
               }
             >
               <Text style={styles.buttonText}>Start Activity</Text>
@@ -97,7 +160,13 @@ export default function ActivityDetailScreen() {
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() =>
-                router.push("../activity-screens/human-performance")
+                router.push({
+                  pathname: "../activity-screens/human-performance",
+                  params: {
+                    activityId: activity.id,
+                    activityTitle: activity.title,
+                  },
+                })
               }
             >
               <Text style={styles.buttonText}>Start Activity</Text>
@@ -107,7 +176,13 @@ export default function ActivityDetailScreen() {
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() =>
-                router.push("../activity-screens/reaction-board")
+                router.push({
+                  pathname: "../activity-screens/reaction-board",
+                  params: {
+                    activityId: activity.id,
+                    activityTitle: activity.title,
+                  },
+                })
               }
             >
               <Text style={styles.buttonText}>Start Activity</Text>
@@ -117,26 +192,19 @@ export default function ActivityDetailScreen() {
           {activity.id === "A7" && (
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => router.push("../activity-screens/breathing-pace")}
+              onPress={() =>
+                router.push({
+                  pathname: "../activity-screens/breathing-pace",
+                  params: {
+                    activityId: activity.id,
+                    activityTitle: activity.title,
+                  },
+                })
+              }
             >
-              <Text style={styles.buttonText}>Open Breathing Sensor</Text>
+              <Text style={styles.buttonText}>Start Activity</Text>
             </TouchableOpacity>
           )}
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() =>
-              router.push({
-                pathname: "/results",
-                params: {
-                  activityId: activity.id,
-                  activityTitle: activity.title,
-                },
-              })
-            }
-          >
-            <Text style={styles.buttonText}>Enter Results</Text>
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.secondaryButton}
@@ -236,5 +304,14 @@ const styles = StyleSheet.create({
     color: "#2563eb",
     fontSize: 16,
     fontWeight: "800",
+  },
+  submitButton: {
+    width: "100%",
+    backgroundColor: "#10b981",
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
   },
 });

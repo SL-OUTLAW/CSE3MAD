@@ -4,6 +4,22 @@ import { TeamProvider } from "../../context/TeamContext";
 import { startBatteryWarningService } from "../services/batteryService";
 import { registerBackgroundResultSync } from "../services/backgroundSyncService";
 import { StatusBar } from "expo-status-bar";
+import { initDatabase } from "../services/resultStorageService";
+import * as Location from "expo-location";
+
+useEffect(() => {
+  initDatabase();
+  registerBackgroundResultSync().catch(console.error);
+}, []);
+
+useEffect(() => {
+  (async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.warn("Location permission denied");
+    }
+  })();
+}, []);
 
 export default function RootLayout() {
   useEffect(() => {
@@ -19,6 +35,8 @@ export default function RootLayout() {
       batterySubscription?.remove();
     };
   }, []);
+
+  // Switched order - (tabs) login for development
 
   return (
     <TeamProvider>

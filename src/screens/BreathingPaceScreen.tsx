@@ -24,7 +24,11 @@ import {
 
 type BreathingPaceScreenProps = {
   onBack: () => void;
+  onLogResults: () => void;
   onSubmit: () => void;
+  hasDraft?: boolean;
+  activityId?: string;
+  activityTitle?: string;
 };
 
 const RECORD_DURATION_SEC = 20;
@@ -324,6 +328,8 @@ function AttemptModal({
 export default function BreathingPaceScreen({
   onBack,
   onSubmit,
+  onLogResults,
+  hasDraft,
 }: BreathingPaceScreenProps) {
   const [recordState, setRecordState] = useState<RecordState>("idle");
   const [countdown, setCountdown] = useState(3);
@@ -864,7 +870,7 @@ export default function BreathingPaceScreen({
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.logButton} onPress={onBack}>
+          <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
             <View style={styles.logButtonContent}>
               <Text style={styles.logButtonText}>Log Results</Text>
               <Text style={styles.arrowIcon}>➔</Text>

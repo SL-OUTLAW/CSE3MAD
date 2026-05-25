@@ -14,7 +14,11 @@ import { calculateSeismicVibration } from "../services/physicsCalculationService
 
 type HumanPerformanceLabScreenProps = {
   onBack: () => void;
+  onLogResults: () => void;
   onSubmit: () => void;
+  hasDraft?: boolean;
+  activityId?: string;
+  activityTitle?: string;
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -37,6 +41,8 @@ type AttemptResult = {
 export default function HumanPerformanceLabScreen({
   onBack,
   onSubmit,
+  onLogResults,
+  hasDraft,
 }: HumanPerformanceLabScreenProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [selectedMovement, setSelectedMovement] = useState(1);
@@ -154,16 +160,6 @@ export default function HumanPerformanceLabScreen({
     finishAttempt();
   };
 
-  const resetSession = () => {
-    setAttempts([]);
-    setVibrationHistory([0, 0, 0, 0, 0]);
-    setVibration(0);
-    setPeakVibration(0);
-    setStatus("SENSOR ACTIVE");
-    setIsTracking(false);
-    setIsRecording(false);
-    setCountdown(ATTEMPT_DURATION_SECONDS);
-  };
   return (
     <ScrollView
       style={styles.scrollContainer}
@@ -269,7 +265,8 @@ export default function HumanPerformanceLabScreen({
                   { fontSize: 14, color: "red", fontWeight: "700" },
                 ]}
               >
-                Average: {attempts[attempts.length - 1].avgVibration.toFixed(2)}g
+                Average: {attempts[attempts.length - 1].avgVibration.toFixed(2)}
+                g
               </Text>
             </Text>
           )}
@@ -340,7 +337,7 @@ export default function HumanPerformanceLabScreen({
           </View>
         )}
 
-        <TouchableOpacity style={styles.logButton} onPress={resetSession}>
+        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
           <View style={styles.logButtonContent}>
             <Text style={styles.logButtonText}>Log Results</Text>
             <Text style={styles.arrowIcon}>➔</Text>
