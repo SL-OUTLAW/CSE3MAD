@@ -12,6 +12,15 @@ import {
   View,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import {
+  BreathingDetectionState,
+  createBreathingDetectionState,
+  processBreathingSample,
+  resetBreathingDetectionState,
+  estimateBreathsFromSamples,
+  calculateBpmFromBreathCount,
+  validateBreathCount,
+} from "../services/physicsCalculationService";
 
 type BreathingPaceScreenProps = {
   onBack: () => void;
@@ -25,6 +34,10 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 type AttemptResult = {
   restSamples: number[];
   exerciseSamples: number[];
+  restBpm: number;
+  exerciseBpm: number;
+  restBreathCount: number;
+  exerciseBreathCount: number;
 };
 
 type RecordState =
@@ -35,6 +48,7 @@ type RecordState =
   | "countdown_exercise"
   | "recording_exercise"
   | "done";
+
 const CHART_CONFIG = {
   backgroundColor: "#ffffff",
   backgroundGradientFrom: "#ffffff",
@@ -68,6 +82,7 @@ const EXERCISE_CHART_CONFIG = {
   },
   hideLabels: true,
 };
+
 function BreathingChart({
   samples,
   config,
@@ -139,13 +154,10 @@ function ComparisonChart({
 
   const normalize = (arr: number[]) => {
     if (arr.length === maxLength) return arr;
-
     const padded = [...arr];
-
     while (padded.length < maxLength) {
       padded.push(arr[arr.length - 1] ?? 0);
     }
-
     return padded;
   };
 
@@ -203,6 +215,7 @@ function ComparisonChart({
     </View>
   );
 }
+
 function AttemptModal({
   attempt,
   attemptNumber,
@@ -231,7 +244,7 @@ function AttemptModal({
               <Text
                 style={[
                   modalStyles.closeBtnText,
-                  { color: "black", fontWeight: 700 },
+                  { color: "black", fontWeight: "700" },
                 ]}
               >
                 ✕
@@ -243,6 +256,21 @@ function AttemptModal({
             showsVerticalScrollIndicator={false}
             style={{ maxHeight: 420 }}
           >
+            <View style={modalStyles.bpmSummary}>
+              <View style={modalStyles.bpmCard}>
+                <Text style={modalStyles.bpmLabel}>Rest BPM</Text>
+                <Text style={[modalStyles.bpmValue, { color: "#2563eb" }]}>
+                  {attempt.restBpm}
+                </Text>
+              </View>
+              <View style={modalStyles.bpmCard}>
+                <Text style={modalStyles.bpmLabel}>Exercise BPM</Text>
+                <Text style={[modalStyles.bpmValue, { color: "#dc2626" }]}>
+                  {attempt.exerciseBpm}
+                </Text>
+              </View>
+            </View>
+
             <Text style={modalStyles.chartLabel}>Comparison</Text>
             <View style={modalStyles.chartContainer}>
               <ComparisonChart
@@ -292,6 +320,7 @@ function AttemptModal({
     </Modal>
   );
 }
+
 export default function BreathingPaceScreen({
   onBack,
   onSubmit,
@@ -310,13 +339,26 @@ export default function BreathingPaceScreen({
     null,
   );
 
+  const [displayBpm, setDisplayBpm] = useState<number | null>(null);
+  const [restBpmSaved, setRestBpmSaved] = useState<number | null>(null);
+  const [exerciseBpmSaved, setExerciseBpmSaved] = useState<number | null>(null);
+
   const isRecordingRef = useRef(false);
   const samplesRef = useRef<number[]>([]);
   const startTimeRef = useRef(0);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isRecording =
+  const breathCountRef = useRef(0);
+  const restBreathCountRef = useRef(0);
+
+  const breathingStateRef = useRef<BreathingDetectionState>(
+    createBreathingDetectionState(),
+  );
+
+  const lastDisplayBpmRef = useRef<number | null>(null);
+
+  const isRecordingActive =
     recordState === "recording_rest" || recordState === "recording_exercise";
   const currentColor = recordState.includes("rest") ? "#2563eb" : "#dc2626";
   const currentLabel = recordState.includes("rest") ? "Rest" : "Exercise";
@@ -331,27 +373,85 @@ export default function BreathingPaceScreen({
         );
     });
   }, []);
+
+  useEffect(() => {
+    if (recordState === "idle") {
+      setDisplayBpm(null);
+      setRestBpmSaved(null);
+      setExerciseBpmSaved(null);
+    } else if (recordState === "transition") {
+      setDisplayBpm(null);
+    }
+  }, [recordState]);
+
   useEffect(() => {
     let sub: any;
-    if (isRecording) {
+    if (isRecordingActive) {
       Accelerometer.setUpdateInterval(SAMPLE_INTERVAL_MS);
-      sub = Accelerometer.addListener(({ y }) => {
+      sub = Accelerometer.addListener(({ z }) => {
         if (!isRecordingRef.current) return;
-        samplesRef.current = [...samplesRef.current, y];
+
+        const currentTime = Date.now();
+        samplesRef.current = [...samplesRef.current, z];
         setLiveSamples([...samplesRef.current]);
+
+        if (breathingStateRef.current.startTime === 0) {
+          breathingStateRef.current.startTime = startTimeRef.current;
+        }
+
+        const result = processBreathingSample(
+          breathingStateRef.current,
+          z,
+          currentTime,
+        );
+
+        if (result.breathCount !== breathCountRef.current) {
+          breathCountRef.current = result.breathCount;
+        }
+
+        if (result.isBreathPeak) {
+          if (result.currentBpm !== null && result.currentBpm > 0) {
+            setDisplayBpm(result.currentBpm);
+            lastDisplayBpmRef.current = result.currentBpm;
+          } else {
+            const elapsedSec = (currentTime - startTimeRef.current) / 1000;
+            if (elapsedSec > 0 && result.breathCount > 0) {
+              const bpm = (result.breathCount / elapsedSec) * 60;
+              const clampedBpm = Math.min(45, Math.max(8, bpm));
+              setDisplayBpm(clampedBpm);
+              lastDisplayBpmRef.current = clampedBpm;
+            }
+          }
+        }
       });
     }
     return () => sub?.remove();
-  }, [isRecording]);
+  }, [isRecordingActive]);
 
   useEffect(() => {
-    if (!isRecording) return;
-    startTimeRef.current = Date.now();
+    if (!isRecordingActive) return;
+
+    const now = Date.now();
+    startTimeRef.current = now;
+    breathingStateRef.current.startTime = now;
+    breathCountRef.current = 0;
+    lastDisplayBpmRef.current = null;
+
     recordTimerRef.current = setInterval(() => {
       const secs = Math.floor((Date.now() - startTimeRef.current) / 1000);
       setElapsed(secs);
+
+      if (secs > 0 && breathingStateRef.current.breathCount > 0) {
+        const bpm = (breathingStateRef.current.breathCount / secs) * 60;
+        const clampedBpm = Math.min(45, Math.max(5, bpm));
+        const finalBpm = parseFloat(clampedBpm.toFixed(2));
+        setDisplayBpm(finalBpm);
+        lastDisplayBpmRef.current = finalBpm;
+      }
+
       if (secs >= RECORD_DURATION_SEC) stopRecording();
     }, 200);
+
     return () => {
       if (recordTimerRef.current) clearInterval(recordTimerRef.current);
     };
@@ -363,16 +463,18 @@ export default function BreathingPaceScreen({
       recordState !== "countdown_exercise"
     )
       return;
+
     let c = 3;
     setCountdown(c);
     countdownTimerRef.current = setInterval(() => {
       c -= 1;
       setCountdown(c);
       if (c <= 0) {
-        clearInterval(countdownTimerRef.current!);
+        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
         beginRecording();
       }
     }, 1000);
+
     return () => {
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     };
@@ -383,6 +485,15 @@ export default function BreathingPaceScreen({
     setLiveSamples([]);
     setElapsed(0);
     isRecordingRef.current = true;
+
+    const now = Date.now();
+    startTimeRef.current = now;
+
+    resetBreathingDetectionState(breathingStateRef.current, now);
+    breathCountRef.current = 0;
+    setDisplayBpm(0);
+    lastDisplayBpmRef.current = null;
+
     setRecordState((prev) =>
       prev === "countdown_rest" ? "recording_rest" : "recording_exercise",
     );
@@ -391,29 +502,104 @@ export default function BreathingPaceScreen({
   function stopRecording() {
     isRecordingRef.current = false;
     if (recordTimerRef.current) clearInterval(recordTimerRef.current);
-    const savedSamples = [...samplesRef.current];
 
-    if (savedSamples.length < 2) {
+    const savedSamples = [...samplesRef.current];
+    const elapsedSec = Math.max(elapsed, 1);
+    let savedBreathCount = breathingStateRef.current.breathCount;
+
+    let validBreathCount = validateBreathCount(savedBreathCount, elapsedSec);
+
+    if (validBreathCount !== savedBreathCount || savedBreathCount === 0) {
+      validBreathCount = estimateBreathsFromSamples(
+        savedSamples,
+        SAMPLE_INTERVAL_MS,
+      );
+      validBreathCount = validateBreathCount(validBreathCount, elapsedSec);
+    }
+
+    let finalBpm =
+      lastDisplayBpmRef.current !== null && lastDisplayBpmRef.current > 0
+        ? lastDisplayBpmRef.current
+        : calculateBpmFromBreathCount(validBreathCount, elapsedSec);
+
+    finalBpm = Math.min(45, Math.max(5, finalBpm));
+    setDisplayBpm(finalBpm);
+
+    if (savedSamples.length < 10) {
+      Alert.alert(
+        "Insufficient Data",
+        "Not enough sensor data collected. Please try again.",
+      );
       setRecordState("idle");
       return;
     }
 
     if (recordState === "recording_rest") {
+      restBreathCountRef.current = validBreathCount;
+      setRestBpmSaved(finalBpm);
       setCurrentRestSamples(savedSamples);
       setRecordState("transition");
     } else if (recordState === "recording_exercise") {
-      if (!currentRestSamples) return;
+      if (!currentRestSamples) {
+        Alert.alert("Error", "Rest data missing. Please restart.");
+        setRecordState("idle");
+        return;
+      }
+
+      const restBpm =
+        restBpmSaved ??
+        calculateBpmFromBreathCount(restBreathCountRef.current, elapsedSec);
+      setExerciseBpmSaved(finalBpm);
+
       const fullAttempt: AttemptResult = {
         restSamples: currentRestSamples,
         exerciseSamples: savedSamples,
+        restBpm,
+        exerciseBpm: finalBpm,
+        restBreathCount: restBreathCountRef.current,
+        exerciseBreathCount: validBreathCount,
       };
+
       setAttempts((prev) => [...prev, fullAttempt]);
       setRecordState("done");
       setCurrentRestSamples(null);
     }
   }
+
+  function resetForNewAttempt() {
+    setRecordState("idle");
+    setDisplayBpm(null);
+    setRestBpmSaved(null);
+    setExerciseBpmSaved(null);
+    setCurrentRestSamples(null);
+    samplesRef.current = [];
+    breathCountRef.current = 0;
+    restBreathCountRef.current = 0;
+    lastDisplayBpmRef.current = null;
+  }
+
   const progressPct = Math.min(elapsed / RECORD_DURATION_SEC, 1);
   const timeLeft = Math.max(0, RECORD_DURATION_SEC - elapsed);
+
+  const getCurrentBpmDisplay = () => {
+    if (
+      recordState === "recording_rest" ||
+      recordState === "recording_exercise"
+    ) {
+      if (displayBpm !== null && displayBpm > 0) {
+        return displayBpm;
+      }
+      return "-";
+    }
+    if (recordState === "done") {
+      if (exerciseBpmSaved !== null) return exerciseBpmSaved;
+      if (restBpmSaved !== null) return restBpmSaved;
+    }
+    if (recordState === "transition" && restBpmSaved !== null) {
+      return restBpmSaved;
+    }
+    return "-";
+  };
 
   return (
     <>
@@ -438,31 +624,33 @@ export default function BreathingPaceScreen({
               </View>
               <View style={styles.metricColumn}>
                 <Text style={[styles.metricValue, { color: currentColor }]}>
-                  {isRecording ? `${liveSamples.length}` : "-"}
+                  {getCurrentBpmDisplay()}
                 </Text>
-                <Text style={styles.metricLabel}>Samples</Text>
+                <Text style={styles.metricLabel}>Breaths/min</Text>
               </View>
               <View style={styles.metricColumn}>
                 <Text
                   style={[
                     styles.statusText,
-                    isRecording && { color: "red" },
+                    isRecordingActive && { color: "red" },
                     recordState === "done" && { color: "#16a34a" },
                     recordState.includes("countdown") && { color: "#ff0000" },
                     recordState === "transition" && { color: "#16a34a" },
                   ]}
                 >
-                  {isRecording
+                  {isRecordingActive
                     ? `${timeLeft}s`
                     : recordState.includes("countdown")
                       ? `${countdown}s`
-                      : "SENSOR\nACTIVE"}
+                      : recordState === "transition"
+                        ? "READY"
+                        : "SENSOR\nACTIVE"}
                 </Text>
               </View>
             </View>
           </View>
 
-          {isRecording && (
+          {isRecordingActive && (
             <View style={[styles.sensorCard, { paddingBottom: 20 }]}>
               <Text style={styles.cardHeader}>
                 Live Sensor Data • {currentLabel}
@@ -493,7 +681,30 @@ export default function BreathingPaceScreen({
 
           {recordState === "done" && latestAttempt && (
             <View style={[styles.sensorCard, { paddingBottom: 20 }]}>
-              <Text style={styles.cardHeader}>Comparison</Text>
+              <Text style={styles.cardHeader}>Comparison - Results</Text>
+              <View style={styles.resultsSummary}>
+                <View style={styles.resultCard}>
+                  <Text style={styles.resultLabel}>Rest BPM</Text>
+                  <Text style={[styles.resultValue, { color: "#2563eb" }]}>
+                    {latestAttempt.restBpm}
+                  </Text>
+                </View>
+                <View style={styles.resultCard}>
+                  <Text style={styles.resultLabel}>Exercise BPM</Text>
+                  <Text style={[styles.resultValue, { color: "#dc2626" }]}>
+                    {latestAttempt.exerciseBpm}
+                  </Text>
+                </View>
+                <View style={styles.resultCard}>
+                  <Text style={styles.resultLabel}>Difference</Text>
+                  <Text style={styles.resultValue}>
+                    Δ
+                    {Math.abs(
+                      latestAttempt.exerciseBpm - latestAttempt.restBpm,
+                    ).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
               <View style={styles.legend}>
                 <View style={styles.legendItem}>
                   <View
@@ -529,21 +740,36 @@ export default function BreathingPaceScreen({
                 2. Place device with Side Quest app over your chest.
               </Text>
               <Text style={styles.instructStep}>
-                3. Breathe for {RECORD_DURATION_SEC} seconds.
+                3. Breathe normally for {RECORD_DURATION_SEC} seconds.
+              </Text>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: "#666", fontSize: 14, marginTop: 10 },
+                ]}
+              >
+                Expected range: 12-20 BPM resting
               </Text>
             </View>
           )}
 
-          {recordState === "transition" && (
+          {recordState === "transition" && restBpmSaved !== null && (
             <View style={styles.sensorCard}>
               <Text style={styles.cardHeader}>
                 Post-Exercise Breathing Pace
               </Text>
+              <View style={styles.savedBpmCard}>
+                <Text style={styles.savedBpmLabel}>Resting BPM Recorded:</Text>
+                <Text style={[styles.savedBpmValue, { color: "#2563eb" }]}>
+                  {restBpmSaved}
+                </Text>
+              </View>
               <Text style={styles.instructStep}>
                 1. Lift the operational smartphone setup away from your body.
               </Text>
               <Text style={styles.instructStep}>
-                2. Perform light exercise.
+                2. Perform light exercise (jumping jacks, running in place,
+                etc.) for 30-60 seconds.
               </Text>
               <Text style={styles.instructStep}>
                 3. Immediately resume your flat positioning.
@@ -575,7 +801,7 @@ export default function BreathingPaceScreen({
 
           {attempts.length > 0 && (
             <View style={styles.sensorCard}>
-              <Text style={styles.cardHeader}>Attempts</Text>
+              <Text style={styles.cardHeader}>Previous Attempts</Text>
               {attempts.map((a, idx) => (
                 <TouchableOpacity
                   key={idx}
@@ -588,8 +814,8 @@ export default function BreathingPaceScreen({
                       Attempt {idx + 1}
                     </Text>
                     <Text style={styles.attemptStat}>
-                      Rest Samples: {a.restSamples.length} • Exercise Samples:{" "}
-                      {a.exerciseSamples.length}
+                      Rest: {a.restBpm} bpm • Post-Exercise: {a.exerciseBpm} bpm
+                      • Δ{Math.abs(a.exerciseBpm - a.restBpm).toFixed(2)}
                     </Text>
                   </View>
                   <Text style={styles.attemptChevron}>›</Text>
@@ -603,7 +829,9 @@ export default function BreathingPaceScreen({
               style={[styles.trackingButton, { backgroundColor: "#2563eb" }]}
               onPress={() => setRecordState("countdown_rest")}
             >
-              <Text style={styles.trackingButtonText}>Start</Text>
+              <Text style={styles.trackingButtonText}>
+                Start Rest Recording
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -612,39 +840,46 @@ export default function BreathingPaceScreen({
               style={[styles.trackingButton, { backgroundColor: "#2563eb" }]}
               onPress={() => setRecordState("countdown_exercise")}
             >
-              <Text style={styles.trackingButtonText}>Continue</Text>
+              <Text style={styles.trackingButtonText}>
+                Continue to Exercise
+              </Text>
             </TouchableOpacity>
           )}
 
-          {isRecording && (
+          {isRecordingActive && (
             <TouchableOpacity
-              style={[styles.trackingButton, { backgroundColor: "#000" }]}
+              style={[styles.trackingButton, { backgroundColor: "#dc2626" }]}
               onPress={stopRecording}
             >
-              <Text style={styles.trackingButtonText}>Stop</Text>
+              <Text style={styles.trackingButtonText}>Stop Recording</Text>
             </TouchableOpacity>
           )}
 
           {recordState === "done" && (
             <TouchableOpacity
               style={[styles.trackingButton, { backgroundColor: "#16a34a" }]}
-              onPress={() => setRecordState("idle")}
+              onPress={resetForNewAttempt}
             >
               <Text style={styles.trackingButtonText}>New Attempt</Text>
             </TouchableOpacity>
           )}
+
           <TouchableOpacity style={styles.logButton} onPress={onBack}>
             <View style={styles.logButtonContent}>
               <Text style={styles.logButtonText}>Log Results</Text>
               <Text style={styles.arrowIcon}>➔</Text>
             </View>
           </TouchableOpacity>
+
           <View style={styles.bottomRow}>
             <TouchableOpacity style={styles.quitButton} onPress={onBack}>
               <Text style={styles.bottomButtonText}>Quit</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.submitButton}
+              style={[
+                styles.submitButton,
+                attempts.length === 0 && styles.disabledButton,
+              ]}
               onPress={attempts.length > 0 ? onSubmit : undefined}
             >
               <Text style={styles.bottomButtonText}>Submit</Text>
@@ -661,6 +896,7 @@ export default function BreathingPaceScreen({
     </>
   );
 }
+
 const styles = StyleSheet.create({
   scrollContainer: { flex: 1, backgroundColor: "#ffffff" },
   scrollContent: { alignItems: "center", paddingVertical: 20 },
@@ -736,7 +972,7 @@ const styles = StyleSheet.create({
     color: "#000000",
     marginBottom: 8,
     lineHeight: 20,
-    fontWeight: 600,
+    fontWeight: "600",
   },
   attemptRow: {
     flexDirection: "row",
@@ -761,9 +997,9 @@ const styles = StyleSheet.create({
     height: 56,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 50,
+    marginBottom: 20,
   },
-  trackingButtonText: { color: "#ffffff", fontSize: 20, fontWeight: "400" },
+  trackingButtonText: { color: "#ffffff", fontSize: 18, fontWeight: "600" },
   bottomRow: { flexDirection: "row", justifyContent: "space-between" },
   quitButton: {
     backgroundColor: "#F08787",
@@ -784,6 +1020,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: "45%",
     alignItems: "center",
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   bottomButtonText: {
     fontSize: 24,
@@ -815,7 +1054,49 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#999999",
   },
+  resultsSummary: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+    paddingVertical: 12,
+    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+  },
+  resultCard: {
+    alignItems: "center",
+  },
+  resultLabel: {
+    fontSize: 12,
+    color: "#64748b",
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  resultValue: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#000000",
+  },
+  savedBpmCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    backgroundColor: "#f0f9ff",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  savedBpmLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  savedBpmValue: {
+    fontSize: 28,
+    fontWeight: "800",
+  },
 });
+
 const modalStyles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -870,4 +1151,25 @@ const modalStyles = StyleSheet.create({
     justifyContent: "center",
   },
   doneBtnText: { color: "#ffffff", fontSize: 18, fontWeight: "700" },
+  bpmSummary: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+    paddingVertical: 16,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 16,
+  },
+  bpmCard: {
+    alignItems: "center",
+  },
+  bpmLabel: {
+    fontSize: 14,
+    color: "#64748b",
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  bpmValue: {
+    fontSize: 32,
+    fontWeight: "800",
+  },
 });

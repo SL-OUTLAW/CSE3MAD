@@ -66,20 +66,52 @@ export const activities = [
     category: "Medical Science + Biomechanics",
     description:
       "Measure speed, smoothness, and coordination during stretching activities.",
-    tools: ["Movement sensor", "Timer", "Result comparison"],
+    equipment: [
+      "Mobile phone with Side Quest app",
+      "Open space to move freely",
+    ],
+    instructions: [
+      "Hold the phone firmly in one hand.",
+      'Press "Start Attempt"',
+      "Perform the 3 movements slowly as mentioned in the app.",
+      "Repeat the movements.",
+      "Find which movement is the hardest to keep vibration low.",
+      "Review the vibration intensity in the Side Quest app.",
+      "Upload results and reflect as a group.",
+    ],
   },
   {
     id: "A6",
     title: "Reaction Board Challenge",
     category: "Neuroscience + Mathematics",
     description: "Measure reaction time, coordination, and improvement.",
-    tools: ["Reaction timer", "Score tracking", "Leaderboard"],
+    equipment: ["Mobile phone with Side Quest app", "Clear working space"],
+    instructions: [
+      "Test reaction speed of the dominant hand in 'Dominant' section.",
+      "Record reaction time.",
+      "Rotate through each team member\n",
+
+      "Repeat using the 'Non-Dominant' hand section.",
+      "Compare and record results.",
+      "Rotate through each team member.\n",
+
+      "Trace a moving shape on the screen in 'Tracing' section.",
+      "Review accuracy and delay",
+      "Rotate through each team member",
+    ],
   },
   {
     id: "A7",
     title: "Breathing Pace Trainer",
     category: "Medical Science",
     description: "Analyse breathing patterns at rest and after exercise.",
-    tools: ["Accelerometer", "Breathing pace", "Result entry"],
+    equipment: ["Mobile phone with Side Quest app", "Flat surface or a mat"],
+    instructions: [
+      "Place the phone gently on the chest.",
+      "Record breathing at rest",
+      "Perform light exercise.",
+      "Record breathing again and compare results.",
+      "Rotate for each team member",
+    ],
   },
 ];

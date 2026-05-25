@@ -263,18 +263,14 @@ export default function HumanPerformanceLabScreen({
                 { fontSize: 14, color: "red", fontWeight: "700" },
               ]}
             >
-              {attempts.map((a, idx) => {
-                return (
-                  <Text
-                    style={[
-                      styles.cardHeader,
-                      { fontSize: 14, color: "red", fontWeight: "700" },
-                    ]}
-                  >
-                    Average: {a.avgVibration.toFixed(2)}g
-                  </Text>
-                );
-              })}
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { fontSize: 14, color: "red", fontWeight: "700" },
+                ]}
+              >
+                Average: {attempts[attempts.length - 1].avgVibration.toFixed(2)}g
+              </Text>
             </Text>
           )}
 
