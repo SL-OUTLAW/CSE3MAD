@@ -304,7 +304,7 @@ export default function HumanPerformanceLabScreen({
             style={styles.trackingButton}
             onPress={startAttempt}
           >
-            <Text style={styles.trackingButtonText}>▶ Start Attempt</Text>
+            <Text style={styles.trackingButtonText}>Start Attempt</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -316,8 +316,8 @@ export default function HumanPerformanceLabScreen({
         )}
 
         {attempts.length > 0 && (
-          <View style={styles.sensorCard}>
-            <Text style={styles.cardHeader}>Attempt Results</Text>
+          <View style={[styles.sensorCard, {marginBottom:50}]}>
+            <Text style={styles.cardHeader}>Attempts</Text>
             {attempts.map((a, idx) => {
               return (
                 <View key={idx} style={styles.attemptRow}>

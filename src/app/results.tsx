@@ -4,6 +4,7 @@ import { useTeam } from "../../context/TeamContext";
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -17,10 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { saveDraft, loadDraft } from "../services/resultStorageService";
-
-export const options = {
-  presentation: "modal",
-};
 
 const StarRating = ({
   rating,
@@ -188,7 +185,7 @@ export default function ResultsScreen() {
   const pickAttachment = async () => {
     if (!(await requestPermissions())) return;
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"], // ✅ correct for SDK 50+
+      mediaTypes: ["images", "videos"],
       allowsEditing: true,
       quality: 0.8,
     });
@@ -208,137 +205,177 @@ export default function ResultsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.modalOverlay} edges={["top", "left", "right"]}>
-      <View style={styles.centeredContainer}>
+    <Modal
+      visible={true}
+      transparent={true}
+      animationType="none"
+      onRequestClose={handleClose}
+      presentationStyle="fullScreen"
+    >
+      <View style={styles.overlay}>
         <KeyboardAvoidingView
-          style={styles.cardContainer}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.header}>
-              <Text style={styles.title}>Result Draft</Text>
+          <View style={styles.sheet}>
+            {/* Handle bar (optional, for consistency with BreathingPace) */}
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.scrollContent}
+            >
+              <View style={styles.header}>
+                <Text style={styles.title}>Result Logging</Text>
+                <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+                  <Text style={styles.closeBtnText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.subtitle}>
+                {activityTitle || "Selected Activity"}
+              </Text>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>Result</Text>
+                <TextInput
+                  style={[styles.input, styles.textInput, {height:250}]}
+                  placeholder="Enter your results..."
+                  value={resultText}
+                  onChangeText={setResultText}
+                  multiline
+                  textAlignVertical="top"
+                  placeholderTextColor="#94a3b8"
+                />
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>Attachments</Text>
+                <TouchableOpacity
+                  style={styles.attachmentButton}
+                  onPress={pickAttachment}
+                >
+                  <Text style={styles.attachmentButtonText}>
+                    + Add Attachment
+                  </Text>
+                </TouchableOpacity>
+                {attachments.length > 0 && (
+                  <View style={styles.attachmentList}>
+                    {attachments.map((att, index) => (
+                      <AttachmentPreview
+                        key={`${att.uri}-${index}`}
+                        attachment={att}
+                        onRemove={() => removeAttachment(index)}
+                      />
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.section}>
+                <Text style={[styles.sectionLabel, {marginBottom:0,}]}>Rating</Text>
+                <StarRating rating={rating} onRatingChange={setRating} />
+                {rating > 0 && (
+                  <Text style={styles.ratingHint}>
+                    {rating === 1 && "Poor"}
+                    {rating === 2 && "Fair"}
+                    {rating === 3 && "Good"}
+                    {rating === 4 && "Very Good"}
+                    {rating === 5 && "Excellent"}
+                  </Text>
+                )}
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>Comment / Reflection</Text>
+                <TextInput
+                  style={[styles.input, styles.commentInput]}
+                  placeholder="Add any additional comments or reflections..."
+                  value={comment}
+                  onChangeText={setComment}
+                  multiline
+                  placeholderTextColor="#94a3b8"
+                />
+              </View>
+
               <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleManualSave}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.secondaryButton}
                 onPress={handleClose}
-                style={styles.closeButton}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <Text style={styles.secondaryButtonText}>Close</Text>
               </TouchableOpacity>
-            </View>
-            <Text style={styles.subtitle}>
-              {activityTitle || "Selected Activity"}
-            </Text>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Result</Text>
-              <TextInput
-                style={[styles.input, styles.textInput]}
-                placeholder="Enter your result..."
-                value={resultText}
-                onChangeText={setResultText}
-                multiline
-                textAlignVertical="top"
-                placeholderTextColor="#94a3b8"
-              />
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Attachments</Text>
-              <TouchableOpacity
-                style={styles.attachmentButton}
-                onPress={pickAttachment}
-              >
-                <Text style={styles.attachmentButtonText}>
-                  + Add Attachment
-                </Text>
-              </TouchableOpacity>
-              {attachments.length > 0 && (
-                <View style={styles.attachmentList}>
-                  {attachments.map((att, index) => (
-                    <AttachmentPreview
-                      key={`${att.uri}-${index}`}
-                      attachment={att}
-                      onRemove={() => removeAttachment(index)}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Rating</Text>
-              <StarRating rating={rating} onRatingChange={setRating} />
-              {rating > 0 && (
-                <Text style={styles.ratingHint}>
-                  {rating === 1 && "Poor"}
-                  {rating === 2 && "Fair"}
-                  {rating === 3 && "Good"}
-                  {rating === 4 && "Very Good"}
-                  {rating === 5 && "Excellent"}
-                </Text>
-              )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Comment / Reflection</Text>
-              <TextInput
-                style={[styles.input, styles.commentInput]}
-                placeholder="Add any additional comments or reflections..."
-                value={comment}
-                onChangeText={setComment}
-                multiline
-                placeholderTextColor="#94a3b8"
-              />
-            </View>
-
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleManualSave}
-            >
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={handleClose}
-            >
-              <Text style={styles.secondaryButtonText}>Close</Text>
-            </TouchableOpacity>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </View>
-    </SafeAreaView>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
-  centeredContainer: {
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  keyboardAvoidingView: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "flex-end",
   },
-  cardContainer: {
-    width: "90%",
-    maxHeight: "85%",
+  sheet: {
     backgroundColor: "#f8fafc",
-    borderRadius: 24,
-    overflow: "hidden",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
+    paddingBottom: 10,
+    paddingTop: 12,
+    maxHeight: "90%",
   },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 28 },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#cbd5e1",
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
+    alignItems: "flex-start",
+    marginBottom: 20,
   },
-  title: { fontSize: 28, fontWeight: "800", color: "#0f172a" },
-  closeButton: { padding: 8 },
-  closeButtonText: { fontSize: 24, color: "#64748b", fontWeight: "600" },
+  title: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#0f172a",
+    marginTop: 10,
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#dfe2e6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 5,
+  },
+  closeBtnText: {
+    fontSize: 18,
+    color: "#000000",
+    fontWeight: "700",
+  },
   subtitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
     marginBottom: 20,
     color: "#1e293b",
@@ -347,7 +384,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 8,
+    marginBottom: 12,
     color: "#0f172a",
   },
   input: {
@@ -360,7 +397,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#0f172a",
   },
-  textInput: { minHeight: 100, textAlignVertical: "top" },
+  textInput: { minHeight: 120, textAlignVertical: "top" },
   commentInput: { minHeight: 80, textAlignVertical: "top" },
   attachmentButton: {
     backgroundColor: "#e2e8f0",
@@ -420,6 +457,7 @@ const styles = StyleSheet.create({
   ratingHint: { fontSize: 14, color: "#2563eb", marginTop: 4 },
   primaryButton: {
     width: "100%",
+    height:55,
     backgroundColor: "#2563eb",
     paddingVertical: 16,
     borderRadius: 14,
@@ -429,6 +467,7 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     width: "100%",
+    height:55,
     backgroundColor: "#ffffff",
     paddingVertical: 16,
     borderRadius: 14,
