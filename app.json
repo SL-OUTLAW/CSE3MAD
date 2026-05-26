@@ -3,6 +3,9 @@
     "name": "STEMMLabA4Latest",
     "slug": "STEMMLabA4Latest",
     "version": "1.0.0",
+    "androidNavigationBar": {
+      "visible": false
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "stemmlaba4latest",

@@ -1,3 +1,4 @@
+import { useTeam } from "../../../context/TeamContext";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -10,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MENU_ITEMS = [
-  { label: "Team", route: null },
+  { label: "Team", route: "/team-edit" },
   { label: "Settings", route: null },
   { label: "Help", route: null },
   { label: "Sign out", route: null },
@@ -18,6 +19,7 @@ const MENU_ITEMS = [
 
 export default function AccountScreen() {
   const router = useRouter();
+  const { teamName, grade } = useTeam();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -29,8 +31,8 @@ export default function AccountScreen() {
             <Text style={styles.avatarText}>T</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Team Name</Text>
-            <Text style={styles.profileSub}>Grade: Not set</Text>
+            <Text style={styles.profileName}>{teamName || "Team Name"}</Text>
+            <Text style={styles.profileSub}>Grade: {grade || "Not set"}</Text>
           </View>
         </View>
 

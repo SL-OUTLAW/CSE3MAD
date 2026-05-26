@@ -8,10 +8,10 @@ import {
   saveResultOffline,
   syncPendingResultsToFirebase,
 } from "../../services/resultStorageService";
-import BreathingPaceScreen from "../../screens/BreathingPaceScreen";
+import ReactionBoardScreen from "../../screens/ReactionBoard";
 import * as Location from "expo-location";
 
-export default function BreathingRoute() {
+export default function ReactionBoardRoute() {
   const router = useRouter();
   const { activityId, activityTitle } = useLocalSearchParams<{
     activityId: string;
@@ -90,7 +90,7 @@ export default function BreathingRoute() {
   };
 
   return (
-    <BreathingPaceScreen
+    <ReactionBoardScreen
       onBack={handleQuit}
       onLogResults={handleLogResults}
       onSubmit={handleFinalSubmit}
