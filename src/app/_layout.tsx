@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { TeamProvider } from "../../context/TeamContext";
 import { startBatteryWarningService } from "../services/batteryService";
 import { registerBackgroundResultSync } from "../services/backgroundSyncService";
+import { startUpcomingChallengeListener } from "../services/upcomingChallengeListenerService";
 import { StatusBar } from "expo-status-bar";
 import { initDatabase } from "../services/resultStorageService";
 import * as Location from "expo-location";
@@ -26,6 +27,7 @@ export default function RootLayout() {
     void registerBackgroundResultSync();
 
     let batterySubscription: { remove: () => void } | undefined;
+    const upcomingChallengeUnsubscribe = startUpcomingChallengeListener();
 
     startBatteryWarningService().then((subscription) => {
       batterySubscription = subscription;
@@ -33,6 +35,7 @@ export default function RootLayout() {
 
     return () => {
       batterySubscription?.remove();
+      upcomingChallengeUnsubscribe();
     };
   }, []);
 
