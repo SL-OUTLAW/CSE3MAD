@@ -50,7 +50,7 @@ export default function TeamEditScreen() {
       console.error(error);
       Alert.alert(
         "Update failed",
-        "Could not update team details. Please try again."
+        "Could not update team details. Please try again.",
       );
     }
   };

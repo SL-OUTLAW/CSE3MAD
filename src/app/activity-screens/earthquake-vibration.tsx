@@ -8,10 +8,10 @@ import {
   saveResultOffline,
   syncPendingResultsToFirebase,
 } from "../../services/resultStorageService";
-import BreathingPaceScreen from "../../screens/BreathingPaceScreen";
+import EarthquakeDetectionScreen from "../../screens/EarthquakeVibration";
 import * as Location from "expo-location";
 
-export default function BreathingRoute() {
+export default function EarthquakeVibrationRoute() {
   const router = useRouter();
   const { activityId, activityTitle } = useLocalSearchParams<{
     activityId: string;
@@ -90,7 +90,7 @@ export default function BreathingRoute() {
   };
 
   return (
-    <BreathingPaceScreen
+    <EarthquakeDetectionScreen
       onBack={handleQuit}
       onLogResults={handleLogResults}
       onSubmit={handleFinalSubmit}

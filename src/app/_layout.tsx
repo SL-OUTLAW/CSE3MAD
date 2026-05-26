@@ -3,6 +3,23 @@ import { useEffect } from "react";
 import { TeamProvider } from "../../context/TeamContext";
 import { startBatteryWarningService } from "../services/batteryService";
 import { registerBackgroundResultSync } from "../services/backgroundSyncService";
+import { StatusBar } from "expo-status-bar";
+import { initDatabase } from "../services/resultStorageService";
+import * as Location from "expo-location";
+
+useEffect(() => {
+  initDatabase();
+  registerBackgroundResultSync().catch(console.error);
+}, []);
+
+useEffect(() => {
+  (async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.warn("Location permission denied");
+    }
+  })();
+}, []);
 
 export default function RootLayout() {
   useEffect(() => {
@@ -19,24 +36,14 @@ export default function RootLayout() {
     };
   }, []);
 
+  // Switched order - (tabs) login for development
+
   return (
     <TeamProvider>
+      <StatusBar hidden={true} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="team-edit" options={{ headerShown: false }} />
-        <Stack.Screen name="activity/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="results" options={{ headerShown: false }} />
-        <Stack.Screen name="team-profile" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="activity-screens/parachute-tilt"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="activity-screens/breathing-pace"
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack>
     </TeamProvider>
   );
