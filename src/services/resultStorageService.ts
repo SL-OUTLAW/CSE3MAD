@@ -6,7 +6,6 @@ import { syncResult } from "./resultSyncService";
 const db = SQLite.openDatabaseSync("offline_results.db");
 
 export const initDatabase = () => {
-  // Create fresh tables with the correct column names
   db.execAsync(`
     CREATE TABLE IF NOT EXISTS activity_results (
       teamId TEXT NOT NULL,
@@ -44,7 +43,7 @@ async function copyAttachmentToAppDir(
   attemptNumber: number,
   fileType: "image" | "video",
 ): Promise<string> {
-  // Get the app's document directory as a string (not an object)
+  
   const documentDir = Paths.document.uri;
   if (!documentDir) {
     throw new Error("App document directory is not available");
@@ -55,7 +54,7 @@ async function copyAttachmentToAppDir(
   const destDir = `${documentDir}results_attachments/${teamId}/${activityId}/${attemptNumber}/`;
   const destPath = `${destDir}${Date.now()}.${extension}`;
 
-  // Use legacy file operations (reliable and simple)
+  
   await FileSystem.makeDirectoryAsync(destDir, { intermediates: true });
   await FileSystem.copyAsync({ from: sourceUri, to: destPath });
 
@@ -201,7 +200,7 @@ export async function syncPendingResultsToFirebase() {
   }
 }
 
-// ----- DRAFT FUNCTIONS -----
+
 export async function saveDraft(params: {
   teamId: string;
   activityId: string;

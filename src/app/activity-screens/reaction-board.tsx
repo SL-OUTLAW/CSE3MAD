@@ -44,7 +44,7 @@ export default function ReactionBoardRoute() {
       return;
     }
 
-    // Get location before saving
+    
     let latitude: number | null = null;
     let longitude: number | null = null;
     try {

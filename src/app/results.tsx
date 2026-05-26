@@ -102,7 +102,7 @@ export default function ResultsScreen() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  // Load draft on mount
+  
   useEffect(() => {
     if (!teamId || !activityId) {
       console.log(

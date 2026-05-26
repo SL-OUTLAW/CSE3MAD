@@ -36,14 +36,14 @@ export default function RootLayout() {
     };
   }, []);
 
-  // Switched order - (tabs) login for development
+  // Switch order - (tabs) login for development
 
   return (
     <TeamProvider>
       <StatusBar hidden={true} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </TeamProvider>
   );

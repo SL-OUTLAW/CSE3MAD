@@ -44,7 +44,7 @@ export default function EarthquakeVibrationRoute() {
       return;
     }
 
-    // Get location before saving
+    
     let latitude: number | null = null;
     let longitude: number | null = null;
     try {
