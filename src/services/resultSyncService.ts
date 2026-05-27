@@ -14,6 +14,10 @@ export type ResultPayload = {
   performanceLevel?: string;
   feedback?: string;
   calculationData?: CalculationData;
+  attemptNumber?: number;
+  timestamp?: number;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export async function syncResult(result: ResultPayload) {
@@ -30,5 +34,9 @@ export async function syncResult(result: ResultPayload) {
     calculationData: result.calculationData ?? {},
     submittedAt: serverTimestamp(),
     syncStatus: "synced",
+    attemptNumber: result.attemptNumber ?? null,
+    localTimestamp: result.timestamp ?? null,
+    latitude: result.latitude ?? null,
+    longitude: result.longitude ?? null,
   });
 }

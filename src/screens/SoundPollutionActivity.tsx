@@ -15,7 +15,8 @@ type SubmitParams = Record<string, string>;
 
 type SoundPollutionActivityProps = {
   onBack: () => void;
-  onSubmit: (params?: SubmitParams) => void;
+  onLogResults: (params?: SubmitParams) => void;
+  onSubmit: () => void;
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -52,6 +53,7 @@ function getSoundDescription(db: number) {
 
 export default function SoundPollutionActivity({
   onBack,
+  onLogResults,
   onSubmit,
 }: SoundPollutionActivityProps) {
   const recordingRef = useRef<Audio.Recording | null>(null);
@@ -163,8 +165,8 @@ export default function SoundPollutionActivity({
       await startReading();
     }
   };
-  const handleSubmit = () => {
-    onSubmit({
+  const handleLogResults = () => {
+  onLogResults({
       defaultMeasuredValue: String(currentDb),
       currentDb: String(currentDb),
       peakDb: String(result.peakDb),
@@ -262,7 +264,7 @@ export default function SoundPollutionActivity({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logButton} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.logButton} onPress={handleLogResults}>
           <View style={styles.logButtonContent}>
             <Text style={styles.logButtonText}>Log Results</Text>
             <Text style={styles.arrowIcon}>➔</Text>
@@ -274,7 +276,7 @@ export default function SoundPollutionActivity({
             <Text style={styles.bottomButtonText}>Quit</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
             <Text style={styles.bottomButtonText}>Submit</Text>
           </TouchableOpacity>
         </View>

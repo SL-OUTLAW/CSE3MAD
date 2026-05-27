@@ -13,7 +13,11 @@ import { LineChart } from "react-native-chart-kit";
 
 type EarthquakeDetectionScreenProps = {
   onBack: () => void;
+  onLogResults: () => void;
   onSubmit: () => void;
+  hasDraft?: boolean;
+  activityId?: string;
+  activityTitle?: string;
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -21,6 +25,8 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 export default function EarthquakeDetectionScreen({
   onBack,
   onSubmit,
+  onLogResults,
+  hasDraft,
 }: EarthquakeDetectionScreenProps) {
   const [isTracking, setIsTracking] = useState(true);
   const [pga, setPga] = useState(0.0);
@@ -43,7 +49,7 @@ export default function EarthquakeDetectionScreen({
         return;
       }
 
-      Accelerometer.setUpdateInterval(200);
+      Accelerometer.setUpdateInterval(100);
 
       subscription = Accelerometer.addListener(({ x, y, z }) => {
         if (isTracking) {
@@ -178,7 +184,7 @@ export default function EarthquakeDetectionScreen({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logButton}>
+        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
           <View style={styles.logButtonContent}>
             <Text style={styles.logButtonText}>Log Results</Text>
             <Text style={styles.arrowIcon}>➔</Text>

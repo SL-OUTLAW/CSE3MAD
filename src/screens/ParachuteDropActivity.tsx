@@ -16,7 +16,8 @@ type SubmitParams = Record<string, string>;
 
 type Props = {
   onBack: () => void;
-  onSubmit: (params?: SubmitParams) => void;
+  onLogResults: (params?: SubmitParams) => void;
+  onSubmit: () => void;
 };
 
 const ATTEMPTS = ["Baseline", "Prototype 1", "Prototype 2", "Prototype 3"];
@@ -30,7 +31,7 @@ function round(value: number, decimals = 2) {
   return Number(value.toFixed(decimals));
 }
 
-export default function ParachuteDropActivity({ onBack, onSubmit }: Props) {
+export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }: Props) {
   const [attempt, setAttempt] = useState("Baseline");
   const [height, setHeight] = useState("1.75");
   const [mass, setMass] = useState("0.2");
@@ -101,8 +102,8 @@ export default function ParachuteDropActivity({ onBack, onSubmit }: Props) {
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit({
+  const handleLogResults = () => {
+  onLogResults({
       defaultMeasuredValue: fallTime || "0",
       attempt,
       dropHeightM: height,
@@ -238,7 +239,7 @@ export default function ParachuteDropActivity({ onBack, onSubmit }: Props) {
             <Text style={styles.status}>{result.status}</Text>
           </View>
 
-          <TouchableOpacity style={styles.logButton} onPress={handleSubmit}>
+          <TouchableOpacity style={styles.logButton} onPress={handleLogResults}>
             <Text style={styles.logButtonText}>Log Results ➔</Text>
           </TouchableOpacity>
 
@@ -247,7 +248,7 @@ export default function ParachuteDropActivity({ onBack, onSubmit }: Props) {
               <Text style={styles.bottomText}>Quit</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
               <Text style={styles.bottomText}>Submit</Text>
             </TouchableOpacity>
           </View>

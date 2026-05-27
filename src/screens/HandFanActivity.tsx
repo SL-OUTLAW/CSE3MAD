@@ -16,7 +16,8 @@ type SubmitParams = Record<string, string>;
 
 type Props = {
   onBack: () => void;
-  onSubmit: (params?: SubmitParams) => void;
+  onLogResults: (params?: SubmitParams) => void;
+  onSubmit: () => void;
 };
 
 const DISTANCES = ["15", "30", "45"];
@@ -35,7 +36,7 @@ function round(value: number, decimals = 2) {
   return Number(value.toFixed(decimals));
 }
 
-export default function HandFanActivity({ onBack, onSubmit }: Props) {
+export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Props) {
   const [distance, setDistance] = useState("15");
   const [material, setMaterial] = useState("Paper");
   const [fanDesign, setFanDesign] = useState("");
@@ -100,8 +101,8 @@ export default function HandFanActivity({ onBack, onSubmit }: Props) {
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit({
+  const handleLogResults = () => {
+  onLogResults({
       defaultMeasuredValue: bendAngle || "0",
       distanceCm: distance,
       material,
@@ -238,7 +239,7 @@ export default function HandFanActivity({ onBack, onSubmit }: Props) {
             <Text style={styles.status}>{result.movement}</Text>
           </View>
 
-          <TouchableOpacity style={styles.logButton} onPress={handleSubmit}>
+          <TouchableOpacity style={styles.logButton} onPress={handleLogResults}>
             <Text style={styles.logButtonText}>Log Results ➔</Text>
           </TouchableOpacity>
 
@@ -247,7 +248,7 @@ export default function HandFanActivity({ onBack, onSubmit }: Props) {
               <Text style={styles.bottomText}>Quit</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
               <Text style={styles.bottomText}>Submit</Text>
             </TouchableOpacity>
           </View>

@@ -8,10 +8,10 @@ import {
   saveResultOffline,
   syncPendingResultsToFirebase,
 } from "../../services/resultStorageService";
-import EarthquakeDetectionScreen from "../../screens/EarthquakeVibration";
+import ReactionBoardScreen from "../../screens/ReactionBoard";
 import * as Location from "expo-location";
 
-export default function EarthquakeVibrationRoute() {
+export default function ReactionBoardRoute() {
   const router = useRouter();
   const { activityId, activityTitle } = useLocalSearchParams<{
     activityId: string;
@@ -90,7 +90,7 @@ export default function EarthquakeVibrationRoute() {
   };
 
   return (
-    <EarthquakeDetectionScreen
+    <ReactionBoardScreen
       onBack={handleQuit}
       onLogResults={handleLogResults}
       onSubmit={handleFinalSubmit}

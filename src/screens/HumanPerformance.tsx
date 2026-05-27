@@ -14,7 +14,11 @@ import { calculateSeismicVibration } from "../services/physicsCalculationService
 
 type HumanPerformanceLabScreenProps = {
   onBack: () => void;
+  onLogResults: () => void;
   onSubmit: () => void;
+  hasDraft?: boolean;
+  activityId?: string;
+  activityTitle?: string;
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -37,6 +41,8 @@ type AttemptResult = {
 export default function HumanPerformanceLabScreen({
   onBack,
   onSubmit,
+  onLogResults,
+  hasDraft,
 }: HumanPerformanceLabScreenProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [selectedMovement, setSelectedMovement] = useState(1);
@@ -69,7 +75,7 @@ export default function HumanPerformanceLabScreen({
         return;
       }
 
-      Accelerometer.setUpdateInterval(200);
+      Accelerometer.setUpdateInterval(100);
 
       subscription = Accelerometer.addListener(({ x, y, z }) => {
         if (!isTracking) return;
@@ -154,16 +160,6 @@ export default function HumanPerformanceLabScreen({
     finishAttempt();
   };
 
-  const resetSession = () => {
-    setAttempts([]);
-    setVibrationHistory([0, 0, 0, 0, 0]);
-    setVibration(0);
-    setPeakVibration(0);
-    setStatus("SENSOR ACTIVE");
-    setIsTracking(false);
-    setIsRecording(false);
-    setCountdown(ATTEMPT_DURATION_SECONDS);
-  };
   return (
     <ScrollView
       style={styles.scrollContainer}
@@ -246,11 +242,34 @@ export default function HumanPerformanceLabScreen({
           <Text
             style={[
               styles.cardHeader,
-              { fontSize: 14, color: "red", fontWeight: "700" },
+              {
+                fontSize: 14,
+                color: "red",
+                fontWeight: "700",
+                marginBottom: 5,
+              },
             ]}
           >
             Peak: {peakVibration.toFixed(2)}g
           </Text>
+          {attempts.length > 0 && (
+            <Text
+              style={[
+                styles.cardHeader,
+                { fontSize: 14, color: "red", fontWeight: "700" },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { fontSize: 14, color: "red", fontWeight: "700" },
+                ]}
+              >
+                Average: {attempts[attempts.length - 1].avgVibration.toFixed(2)}
+                g
+              </Text>
+            </Text>
+          )}
 
           <LineChart
             data={{
@@ -285,7 +304,7 @@ export default function HumanPerformanceLabScreen({
             style={styles.trackingButton}
             onPress={startAttempt}
           >
-            <Text style={styles.trackingButtonText}>▶ Start Attempt</Text>
+            <Text style={styles.trackingButtonText}>Start Attempt</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -297,8 +316,8 @@ export default function HumanPerformanceLabScreen({
         )}
 
         {attempts.length > 0 && (
-          <View style={styles.sensorCard}>
-            <Text style={styles.cardHeader}>Attempt Results</Text>
+          <View style={[styles.sensorCard, {marginBottom:50}]}>
+            <Text style={styles.cardHeader}>Attempts</Text>
             {attempts.map((a, idx) => {
               return (
                 <View key={idx} style={styles.attemptRow}>
@@ -318,7 +337,7 @@ export default function HumanPerformanceLabScreen({
           </View>
         )}
 
-        <TouchableOpacity style={styles.logButton} onPress={resetSession}>
+        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
           <View style={styles.logButtonContent}>
             <Text style={styles.logButtonText}>Log Results</Text>
             <Text style={styles.arrowIcon}>➔</Text>
@@ -403,8 +422,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   movementButtonActive: {
-    borderColor: "#16a34a",
-    backgroundColor: "#f0fdf4",
+    borderColor: "#1d5db1",
+    backgroundColor: "#eff6ff",
   },
   movementButtonText: {
     fontSize: 14,
@@ -412,7 +431,7 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   movementButtonTextActive: {
-    color: "#16a34a",
+    color: "#1d5db1",
   },
   movementDesc: {
     fontSize: 10,
@@ -421,7 +440,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   movementDescActive: {
-    color: "#16a34a",
+    color: "#1d5db1",
   },
   metricsRow: {
     flexDirection: "row",
