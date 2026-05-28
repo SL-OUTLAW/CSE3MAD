@@ -13,7 +13,7 @@ export const activities = [
       "String",
       "Scissors",
       "Tape",
-    ],
+    ], 
     instructions: [
       "Drop the toy without a parachute and record the fall.",
       "Build a parachute using provided materials.",
