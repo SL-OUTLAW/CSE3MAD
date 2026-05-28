@@ -234,17 +234,26 @@ export default function ActivityDetailScreen() {
 
           {activity.id === "A1" && (
             <TouchableOpacity
-              style={primaryButtonStyle}
-              onPress={() => router.push("/activity-screens/parachute-tilt")}
+              style={styles.primaryButton}
+              onPress={() => router.push("../activity-screens/parachute-drop")}
+           >
+              <Text style={styles.buttonText}>Start Activity</Text>
+           </TouchableOpacity>
+          )}
+          {activity.id === "A2" && (
+            <TouchableOpacity
+               style={styles.primaryButton}
+               onPress={() => router.push("../activity-screens/sound-pollution")}
+           >
+               <Text style={styles.buttonText}>Start Activity</Text>
+           </TouchableOpacity>
+          )}
+            {activity.id === "A3" && (
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push("../activity-screens/hand-fan")}
             >
-              <Text
-                style={[
-                  styles.buttonText,
-                  { fontSize: 16 * colours.textScale },
-                ]}
-              >
-                Open Tilt Detector
-              </Text>
+              <Text style={styles.buttonText}>Start Activity</Text>
             </TouchableOpacity>
           )}
 

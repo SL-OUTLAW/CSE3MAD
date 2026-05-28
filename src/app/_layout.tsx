@@ -47,8 +47,8 @@ export default function RootLayout() {
     <AccessibilityProvider>
       <StatusBar hidden={true} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack>
     </AccessibilityProvider>
   </TeamProvider>
