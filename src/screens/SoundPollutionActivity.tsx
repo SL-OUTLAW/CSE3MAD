@@ -25,30 +25,24 @@ function round(value: number, decimals = 0) {
   return Number(value.toFixed(decimals));
 }
 
+
 function meterToDb(metering: number | undefined) {
   if (typeof metering !== "number") {
     return 0;
   }
-
-  // Expo metering is usually negative dBFS. This converts it into a classroom-friendly 0–100 style dB estimate.
   const estimatedDb = Math.max(0, Math.min(100, 100 + metering));
   return round(estimatedDb);
 }
 
+
 function getSoundStatus(db: number) {
   if (db <= 0) return "LISTENING";
-  if (db < 60) return "SAFE";
+  if (db < 30) return "SAFE";
+  if (db < 60) return "QUIET";
   if (db < 85) return "MODERATE";
-  if (db < 100) return "HIGH";
+  if (db < 90) return "HIGH";
+  if (db < 100) return "VERY HIGH";
   return "DANGEROUS";
-}
-
-function getSoundDescription(db: number) {
-  if (db <= 0) return "Listening for sound level.";
-  if (db < 60) return "Safe for normal classroom activity.";
-  if (db < 85) return "Generally safe, but long exposure can cause fatigue.";
-  if (db < 100) return "Hearing damage is possible after long exposure.";
-  return "Dangerous noise level. Move away or reduce exposure.";
 }
 
 export default function SoundPollutionActivity({
@@ -60,14 +54,14 @@ export default function SoundPollutionActivity({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [isReading, setIsReading] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); 
   const [currentDb, setCurrentDb] = useState(0);
   const [dbHistory, setDbHistory] = useState<number[]>([0, 0, 0, 0, 0]);
-  const [sensorStatus, setSensorStatus] = useState("MIC READY");
+  const [sensorStatus, setSensorStatus] = useState("SENSOR ACTIVE");
 
   const result = useMemo(() => {
     return {
       level: getSoundStatus(currentDb),
-      description: getSoundDescription(currentDb),
       peakDb: Math.max(...dbHistory, currentDb),
     };
   }, [currentDb, dbHistory]);
@@ -75,11 +69,9 @@ export default function SoundPollutionActivity({
   const updateChart = (nextDb: number) => {
     setDbHistory((prevHistory) => {
       const updated = [...prevHistory, nextDb];
-
       if (updated.length > 10) {
         updated.shift();
       }
-
       return updated;
     });
   };
@@ -97,9 +89,8 @@ export default function SoundPollutionActivity({
       try {
         await recordingRef.current.stopAndUnloadAsync();
       } catch {
-        // Ignore stop error if recording was already stopped.
+        
       }
-
       recordingRef.current = null;
     }
   };
@@ -107,7 +98,6 @@ export default function SoundPollutionActivity({
   const startReading = async () => {
     try {
       const permission = await Audio.requestPermissionsAsync();
-
       if (!permission.granted) {
         Alert.alert(
           "Microphone permission needed",
@@ -122,33 +112,25 @@ export default function SoundPollutionActivity({
       });
 
       const recording = new Audio.Recording();
-
       await recording.prepareToRecordAsync({
         ...Audio.RecordingOptionsPresets.LOW_QUALITY,
         isMeteringEnabled: true,
       });
-
       await recording.startAsync();
 
       recordingRef.current = recording;
       setIsReading(true);
+      setHasStarted(true); 
       setSensorStatus("LISTENING");
 
       intervalRef.current = setInterval(async () => {
-        if (!recordingRef.current) {
-          return;
-        }
-
+        if (!recordingRef.current) return;
         const status = await recordingRef.current.getStatusAsync();
-
-        if (!status.isRecording) {
-          return;
-        }
-
+        if (!status.isRecording) return;
         const nextDb = meterToDb(status.metering);
         setCurrentDb(nextDb);
         updateChart(nextDb);
-      }, 500);
+      }, 100);
     } catch {
       Alert.alert(
         "Sound sensor error",
@@ -165,19 +147,18 @@ export default function SoundPollutionActivity({
       await startReading();
     }
   };
+
   const handleLogResults = () => {
-  onLogResults({
+    onLogResults({
       defaultMeasuredValue: String(currentDb),
       currentDb: String(currentDb),
       peakDb: String(result.peakDb),
       riskLevel: result.level,
-      soundDescription: result.description,
     });
   };
 
+  
   useEffect(() => {
-    void startReading();
-
     return () => {
       void stopReading();
     };
@@ -188,8 +169,8 @@ export default function SoundPollutionActivity({
       <ScrollView style={styles.phoneFrame} showsVerticalScrollIndicator={false}>
         <Text style={styles.headerTitle}>Sound Pollution Hunter</Text>
 
-        <View style={styles.sensorCard}>
-          <Text style={styles.cardHeader}>Live sound measurements</Text>
+        <View style={[styles.sensorCard, { height: 200 }]}>
+          <Text style={styles.cardHeader}>Live Sensor Data</Text>
 
           <View style={styles.metricsRow}>
             <View style={styles.metricColumn}>
@@ -201,7 +182,8 @@ export default function SoundPollutionActivity({
               <Text
                 style={[
                   styles.statusText,
-                  (result.level === "HIGH" || result.level === "DANGEROUS") && {
+                  (result.level.includes("HIGH") ||
+                    result.level === "DANGEROUS") && {
                     color: "#dc2626",
                   },
                 ]}
@@ -216,16 +198,19 @@ export default function SoundPollutionActivity({
               <Text style={styles.metricLabel}>Peak</Text>
             </View>
           </View>
-
-          <Text style={styles.resultText}>{result.description}</Text>
-          <Text style={styles.sensorText}>{sensorStatus}</Text>
+          <Text
+            style={[
+              styles.sensorText,
+              sensorStatus === "SENSOR ACTIVE" && { color: "#1d5db1" },
+            ]}
+          >
+            {sensorStatus}
+          </Text>
         </View>
 
         <View style={[styles.sensorCard, { paddingBottom: 0 }]}>
           <Text style={styles.cardHeader}>Sound Chart (dB)</Text>
-          <Text style={styles.peakText}>
-            {result.peakDb > 0 ? `Peak: ${result.peakDb} dB` : ""}
-          </Text>
+          <Text style={styles.peakText}>Peak: {result.peakDb} dB</Text>
 
           <LineChart
             data={{
@@ -260,7 +245,11 @@ export default function SoundPollutionActivity({
 
         <TouchableOpacity style={styles.trackingButton} onPress={toggleReading}>
           <Text style={styles.trackingButtonText}>
-            {isReading ? "Pause reading" : "Resume reading"}
+            {isReading
+              ? "Pause reading"
+              : hasStarted
+              ? "Resume reading"
+              : "Start reading"}
           </Text>
         </TouchableOpacity>
 
@@ -275,7 +264,6 @@ export default function SoundPollutionActivity({
           <TouchableOpacity style={styles.quitButton} onPress={onBack}>
             <Text style={styles.bottomButtonText}>Quit</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
             <Text style={styles.bottomButtonText}>Submit</Text>
           </TouchableOpacity>
@@ -344,22 +332,26 @@ const styles = StyleSheet.create({
     color: "#475569",
   },
   statusText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     color: "#1d5db1",
     textAlign: "center",
     marginBottom: 2,
+    flexWrap: "wrap",
+    width: "100%",
   },
-  resultText: {
-    fontSize: 15,
-    color: "#1f2937",
-    marginBottom: 6,
+  descriptionText: {
+    fontSize: 14,
+    color: "#334155",
+    marginTop: 8,
+    marginBottom: 8,
+    lineHeight: 20,
   },
   sensorText: {
     fontSize: 15,
     color: "#dc2626",
     fontWeight: "800",
-    marginTop: 8,
+    marginTop: 30,
   },
   peakText: {
     fontSize: 14,
@@ -369,22 +361,25 @@ const styles = StyleSheet.create({
   },
   trackingButton: {
     backgroundColor: "#1d5db1",
-    borderRadius: 16,
-    paddingVertical: 15,
-    paddingHorizontal: 18,
-    marginBottom: 20,
+    borderRadius: 14,
+    height: 56,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 65,
   },
   trackingButtonText: {
     color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "800",
-    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "400",
   },
   logButton: {
-    backgroundColor: "#1d5db1",
-    borderRadius: 16,
-    paddingVertical: 15,
-    paddingHorizontal: 18,
+    borderWidth: 2,
+    height: 58,
+    borderColor: "#000000",
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     marginBottom: 20,
   },
   logButtonContent: {
@@ -393,36 +388,43 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "400",
+    color: "#000000",
+    textAlign: "center",
+    flex: 1,
   },
   arrowIcon: {
-    color: "#ffffff",
     fontSize: 20,
-    fontWeight: "800",
+    color: "#999999",
   },
   bottomRow: {
     flexDirection: "row",
-    gap: 12,
+    justifyContent: "space-between",
   },
   quitButton: {
-    flex: 1,
-    backgroundColor: "#ef4444",
-    paddingVertical: 15,
-    borderRadius: 14,
+    backgroundColor: "#F08787",
+    borderWidth: 2,
+    borderColor: "#000000",
+    borderRadius: 30,
+    height: 58,
+    paddingVertical: 10,
+    width: "45%",
     alignItems: "center",
   },
   submitButton: {
-    flex: 1,
-    backgroundColor: "#22c55e",
-    paddingVertical: 15,
-    borderRadius: 14,
+    backgroundColor: "#A3DC9A",
+    borderWidth: 2,
+    height: 58,
+    borderColor: "#000000",
+    borderRadius: 30,
+    paddingVertical: 10,
+    width: "45%",
     alignItems: "center",
   },
   bottomButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 24,
+    fontWeight: "400",
+    color: "#000000",
   },
 });
