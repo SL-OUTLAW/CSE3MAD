@@ -137,9 +137,9 @@ export default function LeaderboardScreen() {
                   style={[
                     styles.rankBadge,
                     {
-                      backgroundColor: isFirst
-                        ? colours.primary
-                        : colours.rowBorder,
+                      backgroundColor: isFirst ? colours.primary : colours.background,
+                      borderColor: isFirst ? colours.primary : colours.border,
+                      borderWidth: highContrast ? 3 : 0,
                     },
                   ]}
                 >
