@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   phoneFrame: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 60,
     paddingBottom: 28,
     backgroundColor: "#ffffff",
   },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "800",
     color: "#000000",
-    marginBottom: 24,
+    marginBottom: 40,
   },
   sensorCard: {
     borderWidth: 1,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 65,
+    marginBottom: 40,
   },
   trackingButtonText: {
     color: "#ffffff",

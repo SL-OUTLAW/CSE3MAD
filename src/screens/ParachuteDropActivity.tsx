@@ -45,7 +45,7 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
   const [bounced, setBounced] = useState(false);
   const [timeToMaxHeight, setTimeToMaxHeight] = useState("");
 
-  // Video player state
+  
   const videoRef = useRef<Video>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
@@ -53,7 +53,7 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
   const [videoDuration, setVideoDuration] = useState(0);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
 
-  // Reset states when video URI changes
+  
   useEffect(() => {
     if (videoUri) {
       setIsVideoLoading(true);
@@ -113,7 +113,7 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
       Alert.alert("Permission needed", "Please allow camera access.");
       return;
     }
-    // Pause current video before picking new one
+    
     if (videoRef.current) {
       await videoRef.current.pauseAsync();
     }
@@ -360,7 +360,7 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
             )}
           </View>
 
-          <View style={[styles.card, { marginBottom: 50 }]}>
+          <View style={[styles.card, { marginBottom: 40 }]}>
             <Text style={styles.cardTitle}>Calculated Results</Text>
             <View style={styles.row}>
               <View style={styles.metric}>
@@ -407,11 +407,11 @@ const styles = StyleSheet.create({
   frame: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 60,
     paddingBottom: 28,
     backgroundColor: "#ffffff",
   },
-  title: { fontSize: 22, fontWeight: "800", color: "#000000", marginBottom: 30 },
+  title: { fontSize: 22, fontWeight: "800", color: "#000000", marginBottom: 40 },
   card: {
     borderWidth: 1,
     borderColor: "#e2e8f0",
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: 10 },
   bottomRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-between",  
   },
   switchRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   outlineButton: {
