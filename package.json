@@ -12,11 +12,12 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@react-native-community/slider": "5.0.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.9.10",
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.0",
-    "expo-av": "~16.0.8",
+    "expo-av": "^16.0.8",
     "expo-background-task": "~1.0.10",
     "expo-battery": "~10.0.8",
     "expo-camera": "~17.0.10",

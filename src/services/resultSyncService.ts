@@ -1,8 +1,6 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 
-export type CalculationData = Record<string, string | number | boolean>;
-
 export type ResultPayload = {
   teamId?: string;
   activityId?: string;
@@ -10,10 +8,6 @@ export type ResultPayload = {
   measuredValue: string;
   rating: string;
   comment: string;
-  calculatedScore?: number;
-  performanceLevel?: string;
-  feedback?: string;
-  calculationData?: CalculationData;
   attemptNumber?: number;
   timestamp?: number;
   latitude?: number | null;
@@ -28,10 +22,6 @@ export async function syncResult(result: ResultPayload) {
     measuredValue: result.measuredValue.trim(),
     rating: result.rating.trim(),
     comment: result.comment.trim(),
-    calculatedScore: result.calculatedScore ?? 0,
-    performanceLevel: result.performanceLevel ?? "Not calculated",
-    feedback: result.feedback ?? "",
-    calculationData: result.calculationData ?? {},
     submittedAt: serverTimestamp(),
     syncStatus: "synced",
     attemptNumber: result.attemptNumber ?? null,

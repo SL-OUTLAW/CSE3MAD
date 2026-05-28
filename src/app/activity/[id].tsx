@@ -133,7 +133,7 @@ export default function ActivityDetailScreen() {
           {activity.id === "A1" && (
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => router.push("../activity-screens/hand-fan")}
+              onPress={() => router.push("../activity-screens/parachute-drop")}
            >
               <Text style={styles.buttonText}>Start Activity</Text>
            </TouchableOpacity>
