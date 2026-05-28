@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,11 +14,62 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTeam } from "../../../context/TeamContext";
 import { useAccessibility } from "../../../context/AccessibilityContext";
+import {
+  loadRecentChallenges,
+  RecentChallenge,
+} from "../../services/resultStorageService";
+import {
+  listenToUpcomingChallengesForHome,
+  UpcomingChallenge,
+} from "../../services/upcomingChallengeListenerService";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { teamName, grade, teamId, rank, score } = useTeam();
   const { colours, highContrast } = useAccessibility();
+  const [recentChallenges, setRecentChallenges] = useState<RecentChallenge[]>(
+    [],
+  );
+  const [upcomingChallenges, setUpcomingChallenges] = useState<
+    UpcomingChallenge[]
+  >([]);
+  const [upcomingError, setUpcomingError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRecent() {
+      try {
+        const cachedRecentChallenges = await loadRecentChallenges(teamId || "");
+
+        if (isMounted) {
+          setRecentChallenges(cachedRecentChallenges);
+        }
+      } catch (error) {
+        console.log("Unable to load recent challenges:", error);
+      }
+    }
+
+    void loadRecent();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [teamId]);
+
+  useEffect(() => {
+    const unsubscribe = listenToUpcomingChallengesForHome(
+      (challenges) => {
+        setUpcomingChallenges(challenges);
+        setUpcomingError("");
+      },
+      (message) => {
+        setUpcomingError(message);
+      },
+    );
+
+    return unsubscribe;
+  }, []);
 
   const themedCardStyle = [
     styles.card,
@@ -116,17 +167,186 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[themedCardStyle, styles.shortInfoCard]}>
+          <View style={[themedCardStyle, styles.recentCard]}> 
             <View style={styles.cardTextGroup}>
-              <Text style={[styles.cardTitle, cardTitleStyle]}>Recent</Text>
+              <Text style={[styles.cardTitle, cardTitleStyle]}>
+                Recent challenges
+              </Text>
+
+              {recentChallenges.length === 0 ? (
+                <Text
+                  style={[
+                    styles.cardText,
+                    {
+                      color: colours.subText,
+                      fontSize: 14 * colours.textScale,
+                    },
+                  ]}
+                >
+                  No recent challenges yet.
+                </Text>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.recentList}
+                >
+                  {recentChallenges.map((challenge) => (
+                    <TouchableOpacity
+                      key={challenge.activityId}
+                      style={[
+                        styles.recentItem,
+                        {
+                          backgroundColor: colours.background,
+                          borderColor: colours.border,
+                          borderWidth: highContrast ? 3 : 1,
+                        },
+                      ]}
+                      activeOpacity={0.7}
+                      onPress={() =>
+                        router.push({
+                          pathname: "../activity/[id]",
+                          params: { id: challenge.activityId },
+                        })
+                      }
+                    >
+                      <Text
+                        numberOfLines={2}
+                        style={[
+                          styles.challengeTitle,
+                          {
+                            color: colours.text,
+                            fontSize: 14 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.activityTitle}
+                      </Text>
+
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.challengeMeta,
+                          {
+                            color: colours.subText,
+                            fontSize: 12 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        Rating: {challenge.rating}/5
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           </View>
-
           <View style={[themedCardStyle, styles.upcomingCard]}>
             <View style={styles.cardTextGroup}>
               <Text style={[styles.cardTitle, cardTitleStyle]}>
                 Upcoming challenges
               </Text>
+
+              {upcomingError.length > 0 && (
+                <Text
+                  style={[
+                    styles.cardText,
+                    {
+                      color: colours.danger,
+                      fontSize: 14 * colours.textScale,
+                    },
+                  ]}
+                >
+                  {upcomingError}
+                </Text>
+              )}
+
+              {upcomingError.length === 0 &&
+                upcomingChallenges.length === 0 && (
+                  <Text
+                    style={[
+                      styles.cardText,
+                      {
+                        color: colours.subText,
+                        fontSize: 14 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    No upcoming challenges yet.
+                  </Text>
+                )}
+
+              {upcomingChallenges.length > 0 && (
+                <ScrollView
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.upcomingList}
+                >
+                  {upcomingChallenges.map((challenge) => (
+                    <TouchableOpacity
+                      key={challenge.id}
+                      style={[
+                        styles.upcomingItem,
+                        {
+                          backgroundColor: colours.background,
+                          borderColor: colours.border,
+                          borderWidth: highContrast ? 3 : 1,
+                        },
+                      ]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (!challenge.activityId) {
+                          return;
+                        }
+
+                        router.push({
+                          pathname: "../activity/[id]",
+                          params: { id: challenge.activityId },
+                        });
+                      }}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.challengeTitle,
+                          {
+                            color: colours.text,
+                            fontSize: 15 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.title}
+                      </Text>
+
+                      <Text
+                        numberOfLines={2}
+                        style={[
+                          styles.challengeMeta,
+                          {
+                            color: colours.subText,
+                            fontSize: 12 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.description}
+                      </Text>
+
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.challengeMeta,
+                          {
+                            color: colours.primary,
+                            fontSize: 12 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.startTime}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -172,7 +392,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  shortInfoCard: {
+  recentCard: {
+    height: 175,
     alignItems: "flex-start",
   },
   upcomingCard: {
@@ -191,5 +412,32 @@ const styles = StyleSheet.create({
   cardTextGroup: {
     flexDirection: "column",
     flex: 1,
+  },
+  recentList: {
+    gap: 10,
+    paddingRight: 8,
+  },
+  recentItem: {
+    width: 150,
+    minHeight: 82,
+    borderRadius: 12,
+    padding: 10,
+    justifyContent: "space-between",
+  },
+  upcomingList: {
+    gap: 10,
+    paddingBottom: 4,
+  },
+  upcomingItem: {
+    width: "100%",
+    borderRadius: 12,
+    padding: 12,
+  },
+  challengeTitle: {
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  challengeMeta: {
+    lineHeight: 17,
   },
 });

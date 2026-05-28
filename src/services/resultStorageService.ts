@@ -1,6 +1,6 @@
-import * as SQLite from "expo-sqlite";
 import { Paths } from "expo-file-system";
 import * as FileSystem from "expo-file-system/legacy";
+import * as SQLite from "expo-sqlite";
 import { syncResult } from "./resultSyncService";
 
 const db = SQLite.openDatabaseSync("offline_results.db");
@@ -30,6 +30,16 @@ export const initDatabase = () => {
       rating INTEGER,
       comment TEXT,
       attachments TEXT,
+      PRIMARY KEY (teamId, activityId)
+    );
+
+     CREATE TABLE IF NOT EXISTS recent_challenges (
+      teamId TEXT NOT NULL,
+      activityId TEXT NOT NULL,
+      activityTitle TEXT NOT NULL,
+      resultText TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      timestamp INTEGER NOT NULL,
       PRIMARY KEY (teamId, activityId)
     );
   `);
@@ -70,6 +80,64 @@ async function getNextAttemptNumber(
     [teamId, activityId],
   );
   return (result?.maxAttempt || 0) + 1;
+}
+
+export type RecentChallenge = {
+  activityId: string;
+  activityTitle: string;
+  resultText: string;
+  rating: number;
+  timestamp: number;
+};
+
+async function saveRecentChallengeCache(params: {
+  teamId: string;
+  activityId: string;
+  activityTitle: string;
+  resultText: string;
+  rating: number;
+  timestamp: number;
+}) {
+  await db.runAsync(
+    `INSERT OR REPLACE INTO recent_challenges
+     (teamId, activityId, activityTitle, resultText, rating, timestamp)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      params.teamId,
+      params.activityId,
+      params.activityTitle,
+      params.resultText,
+      params.rating,
+      params.timestamp,
+    ],
+  );
+
+  await db.runAsync(
+    `DELETE FROM recent_challenges
+     WHERE teamId = ?
+     AND activityId NOT IN (
+       SELECT activityId FROM recent_challenges
+       WHERE teamId = ?
+       ORDER BY timestamp DESC
+       LIMIT 8
+     )`,
+    [params.teamId, params.teamId],
+  );
+}
+
+export async function loadRecentChallenges(teamId: string) {
+  if (!teamId) {
+    return [];
+  }
+
+  return db.getAllAsync<RecentChallenge>(
+    `SELECT activityId, activityTitle, resultText, rating, timestamp
+     FROM recent_challenges
+     WHERE teamId = ?
+     ORDER BY timestamp DESC
+     LIMIT 8`,
+    [teamId],
+  );
 }
 
 export async function saveResultOffline(params: {
@@ -128,6 +196,15 @@ export async function saveResultOffline(params: {
       attachmentUrisJson,
     ],
   );
+
+  await saveRecentChallengeCache({
+    teamId,
+    activityId,
+    activityTitle,
+    resultText,
+    rating,
+    timestamp,
+  });
 
   return { attemptNumber };
 }
