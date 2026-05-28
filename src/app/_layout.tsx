@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { TeamProvider } from "../../context/TeamContext";
+import { AccessibilityProvider } from "../../context/AccessibilityContext";
 import { startBatteryWarningService } from "../services/batteryService";
 import { registerBackgroundResultSync } from "../services/backgroundSyncService";
 import { startUpcomingChallengeListener } from "../services/upcomingChallengeListenerService";
@@ -42,12 +43,14 @@ export default function RootLayout() {
   // Switch order - (tabs) login for development
 
   return (
-    <TeamProvider>
+  <TeamProvider>
+    <AccessibilityProvider>
       <StatusBar hidden={true} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
-    </TeamProvider>
-  );
+    </AccessibilityProvider>
+  </TeamProvider>
+);
 }

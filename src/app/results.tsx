@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { useTeam } from "../../context/TeamContext";
+import { useAccessibility } from "../../context/AccessibilityContext";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,7 +15,6 @@ import {
   View,
   Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { saveDraft, loadDraft } from "../services/resultStorageService";
@@ -26,6 +26,8 @@ const StarRating = ({
   rating: number;
   onRatingChange: (rating: number) => void;
 }) => {
+  const { colours } = useAccessibility();
+
   const stars = [1, 2, 3, 4, 5];
   return (
     <View style={styles.starContainer}>
@@ -38,7 +40,8 @@ const StarRating = ({
           <Text
             style={[
               styles.star,
-              rating >= star ? styles.starFilled : styles.starEmpty,
+              { fontSize: 32 * colours.textScale },
+              rating >= star ? styles.starFilled : { color: colours.border },
             ]}
           >
             ★
@@ -62,17 +65,40 @@ const AttachmentPreview = ({
   attachment: Attachment;
   onRemove: () => void;
 }) => {
+  const { colours, highContrast } = useAccessibility();
+
   const { uri, type, thumbnail } = attachment;
   return (
-    <View style={styles.attachmentPreview}>
+    <View
+      style={[
+        styles.attachmentPreview,
+        {
+          backgroundColor: colours.background,
+          borderColor: colours.border,
+          borderWidth: highContrast ? 2 : 1,
+        },
+      ]}
+    >
       {type === "image" ? (
         <Image source={{ uri }} style={styles.attachmentImage} />
       ) : (
-        <View style={styles.videoPlaceholder}>
+        <View
+          style={[
+            styles.videoPlaceholder,
+            { backgroundColor: colours.background },
+          ]}
+        >
           {thumbnail ? (
             <Image source={{ uri: thumbnail }} style={styles.videoThumbnail} />
           ) : (
-            <Text style={styles.videoPlaceholderText}>🎬</Text>
+            <Text
+              style={[
+                styles.videoPlaceholderText,
+                { fontSize: 32 * colours.textScale },
+              ]}
+            >
+              🎬
+            </Text>
           )}
         </View>
       )}
@@ -85,6 +111,8 @@ const AttachmentPreview = ({
 
 export default function ResultsScreen() {
   const router = useRouter();
+  const { colours, highContrast } = useAccessibility();
+
   const { activityId, activityTitle } = useLocalSearchParams<{
     activityId: string;
     activityTitle: string;
@@ -102,7 +130,6 @@ export default function ResultsScreen() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  
   useEffect(() => {
     if (!teamId || !activityId) {
       console.log(
@@ -204,6 +231,17 @@ export default function ResultsScreen() {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const inputStyle = [
+    styles.input,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+      color: colours.text,
+      fontSize: 16 * colours.textScale,
+    },
+  ];
+
   return (
     <Modal
       visible={true}
@@ -217,44 +255,110 @@ export default function ResultsScreen() {
           style={styles.keyboardAvoidingView}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.sheet}>
-            {/* Handle bar (optional, for consistency with BreathingPace) */}
-
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colours.background,
+                borderColor: colours.border,
+                borderTopWidth: highContrast ? 3 : 0,
+              },
+            ]}
+          >
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.scrollContent}
             >
               <View style={styles.header}>
-                <Text style={styles.title}>Result Logging</Text>
-                <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-                  <Text style={styles.closeBtnText}>✕</Text>
+                <Text
+                  style={[
+                    styles.title,
+                    { color: colours.text, fontSize: 22 * colours.textScale },
+                  ]}
+                >
+                  Result Logging
+                </Text>
+                <TouchableOpacity
+                  onPress={handleClose}
+                  style={[
+                    styles.closeBtn,
+                    {
+                      backgroundColor: colours.card,
+                      borderColor: colours.border,
+                      borderWidth: highContrast ? 2 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.closeBtnText,
+                      { color: colours.text, fontSize: 18 * colours.textScale },
+                    ]}
+                  >
+                    ✕
+                  </Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.subtitle}>
+
+              <Text
+                style={[
+                  styles.subtitle,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 {activityTitle || "Selected Activity"}
               </Text>
 
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Result</Text>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    { color: colours.text, fontSize: 16 * colours.textScale },
+                  ]}
+                >
+                  Result
+                </Text>
                 <TextInput
-                  style={[styles.input, styles.textInput, {height:250}]}
+                  style={[inputStyle, styles.textInput, { height: 250 }]}
                   placeholder="Enter your results..."
                   value={resultText}
                   onChangeText={setResultText}
                   multiline
                   textAlignVertical="top"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={colours.subText}
                 />
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Attachments</Text>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    { color: colours.text, fontSize: 16 * colours.textScale },
+                  ]}
+                >
+                  Attachments
+                </Text>
                 <TouchableOpacity
-                  style={styles.attachmentButton}
+                  style={[
+                    styles.attachmentButton,
+                    {
+                      backgroundColor: colours.card,
+                      borderColor: colours.border,
+                      borderWidth: highContrast ? 3 : 1,
+                    },
+                  ]}
                   onPress={pickAttachment}
                 >
-                  <Text style={styles.attachmentButtonText}>
+                  <Text
+                    style={[
+                      styles.attachmentButtonText,
+                      {
+                        color: colours.text,
+                        fontSize: 14 * colours.textScale,
+                      },
+                    ]}
+                  >
                     + Add Attachment
                   </Text>
                 </TouchableOpacity>
@@ -272,10 +376,29 @@ export default function ResultsScreen() {
               </View>
 
               <View style={styles.section}>
-                <Text style={[styles.sectionLabel, {marginBottom:0,}]}>Rating</Text>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    {
+                      color: colours.text,
+                      fontSize: 16 * colours.textScale,
+                      marginBottom: 0,
+                    },
+                  ]}
+                >
+                  Rating
+                </Text>
                 <StarRating rating={rating} onRatingChange={setRating} />
                 {rating > 0 && (
-                  <Text style={styles.ratingHint}>
+                  <Text
+                    style={[
+                      styles.ratingHint,
+                      {
+                        color: colours.primary,
+                        fontSize: 14 * colours.textScale,
+                      },
+                    ]}
+                  >
                     {rating === 1 && "Poor"}
                     {rating === 2 && "Fair"}
                     {rating === 3 && "Good"}
@@ -286,29 +409,63 @@ export default function ResultsScreen() {
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Comment / Reflection</Text>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    { color: colours.text, fontSize: 16 * colours.textScale },
+                  ]}
+                >
+                  Comment / Reflection
+                </Text>
                 <TextInput
-                  style={[styles.input, styles.commentInput]}
+                  style={[inputStyle, styles.commentInput]}
                   placeholder="Add any additional comments or reflections..."
                   value={comment}
                   onChangeText={setComment}
                   multiline
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={colours.subText}
                 />
               </View>
 
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  { backgroundColor: colours.primary },
+                ]}
                 onPress={handleManualSave}
               >
-                <Text style={styles.buttonText}>Save</Text>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    { color: "#ffffff", fontSize: 16 * colours.textScale },
+                  ]}
+                >
+                  Save
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.secondaryButton}
+                style={[
+                  styles.secondaryButton,
+                  {
+                    backgroundColor: colours.card,
+                    borderColor: colours.primary,
+                    borderWidth: highContrast ? 3 : 1,
+                  },
+                ]}
                 onPress={handleClose}
               >
-                <Text style={styles.secondaryButtonText}>Close</Text>
+                <Text
+                  style={[
+                    styles.secondaryButtonText,
+                    {
+                      color: colours.primary,
+                      fontSize: 16 * colours.textScale,
+                    },
+                  ]}
+                >
+                  Close
+                </Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -457,7 +614,7 @@ const styles = StyleSheet.create({
   ratingHint: { fontSize: 14, color: "#2563eb", marginTop: 4 },
   primaryButton: {
     width: "100%",
-    height:55,
+    height: 55,
     backgroundColor: "#2563eb",
     paddingVertical: 16,
     borderRadius: 14,
@@ -467,7 +624,7 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     width: "100%",
-    height:55,
+    height: 55,
     backgroundColor: "#ffffff",
     paddingVertical: 16,
     borderRadius: 14,

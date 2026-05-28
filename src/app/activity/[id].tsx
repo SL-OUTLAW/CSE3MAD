@@ -1,9 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,11 +11,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { activities } from "../../data/activities";
+import { useAccessibility } from "../../../context/AccessibilityContext";
 import { useTeam } from "../../../context/TeamContext";
+import { activities } from "../../data/activities";
 import {
-  loadDraft,
   clearDraft,
+  loadDraft,
   saveResultOffline,
   syncPendingResultsToFirebase,
 } from "../../services/resultStorageService";
@@ -25,12 +25,14 @@ export default function ActivityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { teamId } = useTeam();
+  const { colours, highContrast } = useAccessibility();
   const [hasDraft, setHasDraft] = useState(false);
 
   const activity = activities.find((a) => a.id === id);
 
   useEffect(() => {
     if (!teamId || !id) return;
+
     loadDraft(teamId, id).then((draft) => {
       console.log(`[ActivityDetail] Draft exists: ${!!draft}`);
       setHasDraft(!!draft);
@@ -39,14 +41,13 @@ export default function ActivityDetailScreen() {
 
   const handleFinalSubmit = async () => {
     if (!teamId || !id) return;
+
     const draft = await loadDraft(teamId, id);
     if (!draft) {
-      Alert.alert(
-        "No draft",
-        "Please enter a result first using 'Enter Results'.",
-      );
+      Alert.alert("No draft", "Please enter a result first using 'Enter Results'.");
       return;
     }
+
     if (!draft.resultText.trim()) {
       Alert.alert("Missing result", "Draft has no result text.");
       return;
@@ -77,16 +78,56 @@ export default function ActivityDetailScreen() {
     }
   };
 
+  const cardStyle = [
+    styles.card,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
+
+  const primaryButtonStyle = [
+    styles.primaryButton,
+    { backgroundColor: colours.primary },
+  ];
+
+  const secondaryButtonStyle = [
+    styles.secondaryButton,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.primary,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
+
   if (!activity) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: colours.background }]}
+      >
         <View style={styles.scrollContent}>
-          <Text style={styles.title}>Activity not found</Text>
+          <Text
+            style={[
+              styles.title,
+              { color: colours.text, fontSize: 28 * colours.textScale },
+            ]}
+          >
+            Activity not found
+          </Text>
+
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={secondaryButtonStyle}
             onPress={() => router.back()}
           >
-            <Text style={styles.secondaryButtonText}>Go Back</Text>
+            <Text
+              style={[
+                styles.secondaryButtonText,
+                { color: colours.primary, fontSize: 16 * colours.textScale },
+              ]}
+            >
+              Go Back
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -94,25 +135,72 @@ export default function ActivityDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      edges={["top", "left", "right"]}
+    >
+      <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>‹ Activities</Text>
+            <Text
+              style={[
+                styles.backText,
+                { color: colours.primary, fontSize: 18 * colours.textScale },
+              ]}
+            >
+              ‹ Activities
+            </Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>{activity.title}</Text>
-          <Text style={styles.category}>{activity.category}</Text>
-          <Text style={styles.bodyText}>{activity.description}</Text>
+          <Text
+            style={[
+              styles.title,
+              { color: colours.text, fontSize: 28 * colours.textScale },
+            ]}
+          >
+            {activity.title}
+          </Text>
+
+          <Text
+            style={[
+              styles.category,
+              { color: colours.primary, fontSize: 14 * colours.textScale },
+            ]}
+          >
+            {activity.category}
+          </Text>
+
+          <Text
+            style={[
+              styles.bodyText,
+              { color: colours.subText, fontSize: 16 * colours.textScale },
+            ]}
+          >
+            {activity.description}
+          </Text>
 
           {"equipment" in activity && activity.equipment && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Equipment</Text>
+            <View style={cardStyle}>
+              <Text
+                style={[
+                  styles.cardTitle,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
+                Equipment
+              </Text>
+
               {activity.equipment.map((item) => (
-                <Text key={item} style={styles.cardText}>
+                <Text
+                  key={item}
+                  style={[
+                    styles.cardText,
+                    { color: colours.subText, fontSize: 15 * colours.textScale },
+                  ]}
+                >
                   • {item}
                 </Text>
               ))}
@@ -120,10 +208,24 @@ export default function ActivityDetailScreen() {
           )}
 
           {"instructions" in activity && activity.instructions && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Instructions</Text>
+            <View style={cardStyle}>
+              <Text
+                style={[
+                  styles.cardTitle,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
+                Instructions
+              </Text>
+
               {activity.instructions.map((step, index) => (
-                <Text key={step} style={styles.cardText}>
+                <Text
+                  key={step}
+                  style={[
+                    styles.cardText,
+                    { color: colours.subText, fontSize: 15 * colours.textScale },
+                  ]}
+                >
                   {index + 1}. {step}
                 </Text>
               ))}
@@ -132,16 +234,23 @@ export default function ActivityDetailScreen() {
 
           {activity.id === "A1" && (
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={primaryButtonStyle}
               onPress={() => router.push("/activity-screens/parachute-tilt")}
             >
-              <Text style={styles.buttonText}>Open Tilt Detector</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { fontSize: 16 * colours.textScale },
+                ]}
+              >
+                Open Tilt Detector
+              </Text>
             </TouchableOpacity>
           )}
 
           {activity.id === "A4" && (
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={primaryButtonStyle}
               onPress={() =>
                 router.push({
                   pathname: "../activity-screens/earthquake-vibration",
@@ -152,13 +261,20 @@ export default function ActivityDetailScreen() {
                 })
               }
             >
-              <Text style={styles.buttonText}>Start Activity</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { fontSize: 16 * colours.textScale },
+                ]}
+              >
+                Start Activity
+              </Text>
             </TouchableOpacity>
           )}
 
           {activity.id === "A5" && (
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={primaryButtonStyle}
               onPress={() =>
                 router.push({
                   pathname: "../activity-screens/human-performance",
@@ -169,12 +285,20 @@ export default function ActivityDetailScreen() {
                 })
               }
             >
-              <Text style={styles.buttonText}>Start Activity</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { fontSize: 16 * colours.textScale },
+                ]}
+              >
+                Start Activity
+              </Text>
             </TouchableOpacity>
           )}
+
           {activity.id === "A6" && (
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={primaryButtonStyle}
               onPress={() =>
                 router.push({
                   pathname: "../activity-screens/reaction-board",
@@ -185,13 +309,20 @@ export default function ActivityDetailScreen() {
                 })
               }
             >
-              <Text style={styles.buttonText}>Start Activity</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { fontSize: 16 * colours.textScale },
+                ]}
+              >
+                Start Activity
+              </Text>
             </TouchableOpacity>
           )}
 
           {activity.id === "A7" && (
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={primaryButtonStyle}
               onPress={() =>
                 router.push({
                   pathname: "../activity-screens/breathing-pace",
@@ -202,15 +333,29 @@ export default function ActivityDetailScreen() {
                 })
               }
             >
-              <Text style={styles.buttonText}>Start Activity</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { fontSize: 16 * colours.textScale },
+                ]}
+              >
+                Start Activity
+              </Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={secondaryButtonStyle}
             onPress={() => router.back()}
           >
-            <Text style={styles.secondaryButtonText}>Back to Activities</Text>
+            <Text
+              style={[
+                styles.secondaryButtonText,
+                { color: colours.primary, fontSize: 16 * colours.textScale },
+              ]}
+            >
+              Back to Activities
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -221,7 +366,9 @@ export default function ActivityDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -233,51 +380,35 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   backText: {
-    fontSize: 18,
-    color: "#2563eb",
     fontWeight: "600",
   },
   title: {
-    fontSize: 28,
     fontWeight: "800",
     marginBottom: 8,
-    color: "#0f172a",
   },
   category: {
-    fontSize: 14,
     fontWeight: "700",
     marginBottom: 12,
-    color: "#2563eb",
   },
   bodyText: {
-    fontSize: 16,
     lineHeight: 22,
     marginBottom: 12,
-    color: "#334155",
   },
   card: {
     width: "100%",
-    backgroundColor: "#ffffff",
     padding: 16,
     borderRadius: 14,
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
   },
   cardTitle: {
-    fontSize: 18,
     fontWeight: "800",
     marginBottom: 6,
-    color: "#0f172a",
   },
   cardText: {
-    fontSize: 15,
     lineHeight: 21,
-    color: "#1f2937",
   },
   primaryButton: {
     width: "100%",
-    backgroundColor: "#2563eb",
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: "center",
@@ -286,23 +417,17 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     width: "100%",
-    backgroundColor: "#ffffff",
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#2563eb",
   },
   buttonText: {
     color: "#ffffff",
-    fontSize: 16,
     fontWeight: "800",
   },
   secondaryButtonText: {
-    color: "#2563eb",
-    fontSize: 16,
     fontWeight: "800",
   },
   submitButton: {

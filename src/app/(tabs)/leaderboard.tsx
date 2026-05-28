@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAccessibility } from "../../../context/AccessibilityContext";
 import { useTeam } from "../../../context/TeamContext";
 import {
   LeaderboardTeam,
@@ -16,6 +17,8 @@ import {
 
 export default function LeaderboardScreen() {
   const { teamId, setRank, setScore } = useTeam();
+  const { colours, highContrast } = useAccessibility();
+
   const [teams, setTeams] = useState<LeaderboardTeam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -45,77 +48,181 @@ export default function LeaderboardScreen() {
     return unsubscribe;
   }, [teamId, setRank, setScore]);
 
+  const cardStyle = [
+    styles.messageCard,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
+
+  const textStyle = {
+    color: colours.subText,
+    fontSize: 15 * colours.textScale,
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      edges={["top", "left", "right"]}
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Leaderboard</Text>
-        <Text style={styles.bodyText}>
+        <Text
+          style={[
+            styles.title,
+            { color: colours.text, fontSize: 28 * colours.textScale },
+          ]}
+        >
+          Leaderboard
+        </Text>
+
+        <Text
+          style={[
+            styles.bodyText,
+            { color: colours.subText, fontSize: 16 * colours.textScale },
+          ]}
+        >
           Team scores update automatically from Firestore.
         </Text>
 
         {isLoading && (
-          <View style={styles.messageCard}>
-            <ActivityIndicator />
-            <Text style={styles.messageText}>Loading leaderboard...</Text>
+          <View style={cardStyle}>
+            <ActivityIndicator color={colours.primary} />
+            <Text style={[styles.messageText, textStyle]}>
+              Loading leaderboard...
+            </Text>
           </View>
         )}
 
         {!isLoading && errorMessage.length > 0 && (
-          <View style={styles.messageCard}>
-            <Text style={styles.errorText}>{errorMessage}</Text>
+          <View style={cardStyle}>
+            <Text
+              style={[
+                styles.errorText,
+                { color: colours.danger, fontSize: 15 * colours.textScale },
+              ]}
+            >
+              {errorMessage}
+            </Text>
           </View>
         )}
 
         {!isLoading && errorMessage.length === 0 && teams.length === 0 && (
-          <View style={styles.messageCard}>
-            <Text style={styles.messageText}>No teams found yet.</Text>
+          <View style={cardStyle}>
+            <Text style={[styles.messageText, textStyle]}>
+              No teams found yet.
+            </Text>
           </View>
         )}
 
         {!isLoading &&
           errorMessage.length === 0 &&
-          teams.map((team) => (
-            <View
-              key={team.id}
-              style={[styles.row, team.rank === 1 && styles.rowFirst]}
-            >
+          teams.map((team) => {
+            const isFirst = team.rank === 1;
+
+            return (
               <View
+                key={team.id}
                 style={[
-                  styles.rankBadge,
-                  team.rank === 1 && styles.rankBadgeFirst,
+                  styles.row,
+                  {
+                    backgroundColor: colours.card,
+                    borderColor: isFirst ? colours.primary : colours.border,
+                    borderWidth: highContrast || isFirst ? 3 : 1,
+                  },
                 ]}
               >
-                <Text
+                <View
                   style={[
-                    styles.rankText,
-                    team.rank === 1 && styles.rankTextFirst,
+                    styles.rankBadge,
+                    {
+                      backgroundColor: isFirst
+                        ? colours.primary
+                        : colours.rowBorder,
+                    },
                   ]}
                 >
-                  #{team.rank}
-                </Text>
-              </View>
+                  <Text
+                    style={[
+                      styles.rankText,
+                      {
+                        color: isFirst ? "#ffffff" : colours.text,
+                        fontSize: 14 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    #{team.rank}
+                  </Text>
+                </View>
 
-              <View style={styles.teamInfo}>
-                <Text style={styles.teamName}>{team.teamName}</Text>
-                <Text style={styles.teamSubText}>Grade: {team.grade}</Text>
-                <Text style={styles.teamSubText}>
-                  Badges: {team.badgeCount}
-                </Text>
-              </View>
+                <View style={styles.teamInfo}>
+                  <Text
+                    style={[
+                      styles.teamName,
+                      { color: colours.text, fontSize: 16 * colours.textScale },
+                    ]}
+                  >
+                    {team.teamName}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.teamSubText,
+                      {
+                        color: colours.subText,
+                        fontSize: 13 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    Grade: {team.grade}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.teamSubText,
+                      {
+                        color: colours.subText,
+                        fontSize: 13 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    Badges: {team.badgeCount}
+                  </Text>
+                </View>
 
-              <View style={styles.scoreBox}>
-                <Text style={styles.scoreText}>{team.totalScore}</Text>
-                <Text style={styles.scoreLabel}>points</Text>
+                <View style={styles.scoreBox}>
+                  <Text
+                    style={[
+                      styles.scoreText,
+                      {
+                        color: colours.primary,
+                        fontSize: 20 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    {team.totalScore}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.scoreLabel,
+                      {
+                        color: colours.subText,
+                        fontSize: 12 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    points
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f8fafc" },
+  safeArea: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
@@ -123,91 +230,54 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   title: {
-    fontSize: 28,
     fontWeight: "800",
     marginBottom: 8,
-    color: "#0f172a",
   },
   bodyText: {
-    fontSize: 16,
     lineHeight: 22,
     marginBottom: 12,
-    color: "#334155",
   },
   messageCard: {
-    backgroundColor: "#ffffff",
     padding: 16,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
     marginTop: 8,
     gap: 8,
   },
-  messageText: {
-    fontSize: 15,
-    color: "#334155",
-  },
+  messageText: {},
   errorText: {
-    fontSize: 15,
-    color: "#dc2626",
     fontWeight: "700",
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
     padding: 16,
     borderRadius: 14,
     marginVertical: 6,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
     gap: 14,
-  },
-  rowFirst: {
-    borderColor: "#2563eb",
-    borderWidth: 2,
-    backgroundColor: "#eff6ff",
   },
   rankBadge: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#e2e8f0",
     alignItems: "center",
     justifyContent: "center",
   },
-  rankBadgeFirst: {
-    backgroundColor: "#2563eb",
-  },
   rankText: {
-    fontSize: 14,
     fontWeight: "800",
-    color: "#334155",
   },
-  rankTextFirst: {
-    color: "#ffffff",
+  teamInfo: {
+    flex: 1,
   },
-  teamInfo: { flex: 1 },
   teamName: {
-    fontSize: 16,
     fontWeight: "700",
-    color: "#0f172a",
     marginBottom: 2,
   },
-  teamSubText: {
-    fontSize: 13,
-    color: "#64748b",
-  },
+  teamSubText: {},
   scoreBox: {
     alignItems: "flex-end",
   },
   scoreText: {
-    fontSize: 20,
     fontWeight: "800",
-    color: "#2563eb",
   },
-  scoreLabel: {
-    fontSize: 12,
-    color: "#64748b",
-  },
+  scoreLabel: {},
 });

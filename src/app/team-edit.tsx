@@ -14,11 +14,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTeam } from "../../context/TeamContext";
+import { useAccessibility } from "../../context/AccessibilityContext";
 import { db } from "../services/firebase";
 
 export default function TeamEditScreen() {
   const router = useRouter();
   const { teamName, grade, teamId, setTeamName, setGrade } = useTeam();
+  const { colours, highContrast } = useAccessibility();
 
   const [localTeamName, setLocalTeamName] = useState(teamName);
   const [localGrade, setLocalGrade] = useState(grade);
@@ -56,7 +58,8 @@ export default function TeamEditScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colours.background }]} edges={["top", "left", "right"]}
+    >
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -69,40 +72,66 @@ export default function TeamEditScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={[styles.backText, { color: colours.primary, fontSize: 18 * colours.textScale },
+              ]}>‹ Back</Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>Edit Team</Text>
-          <Text style={styles.subtitle}>Update your team details</Text>
-
-          <Text style={styles.label}>Team ID</Text>
-          <Text style={styles.teamIdText}>{teamId || "Not saved yet"}</Text>
+          <Text style={[styles.title, { color: colours.text, fontSize: 28 * colours.textScale }]}>
+            Edit Team
+          </Text>
+          <Text style={[styles.subtitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>
+            Update your team details
+          </Text>
+          <Text style={[styles.label, { color: colours.text, fontSize: 15 * colours.textScale }]}>
+            Team ID
+          </Text>
+          <Text style={[styles.teamIdText, { color: colours.text, fontSize: 14 * colours.textScale }]}>
+            {teamId || "Not saved yet"}
+          </Text>
 
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colours.card,
+                borderColor: colours.border,
+                borderWidth: highContrast ? 3 : 1,
+                color: colours.text,
+                fontSize: 16 * colours.textScale,
+              },
+            ]}
             placeholder="Enter team name"
             value={localTeamName}
             onChangeText={setLocalTeamName}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colours.subText}
           />
 
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colours.card,
+                borderColor: colours.border,
+                borderWidth: highContrast ? 3 : 1,
+                color: colours.text,
+                fontSize: 16 * colours.textScale,
+              },
+            ]}
             placeholder="Enter grade/year level"
+            placeholderTextColor={colours.subText}
             value={localGrade}
             onChangeText={setLocalGrade}
-            placeholderTextColor="#94a3b8"
           />
 
-          <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save Team Details</Text>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colours.primary }]} onPress={handleSave}>
+            <Text style={[styles.buttonText, { fontSize: 16 * colours.textScale }]}>Save Team Details</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, { backgroundColor: colours.card, borderColor: colours.primary, borderWidth: highContrast ? 3 : 1 }]}
             onPress={() => router.replace("../(tabs)/home")}
           >
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
+            <Text style={[styles.secondaryButtonText, {color: colours.primary, fontSize: 16 * colours.textScale }] }>Cancel</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

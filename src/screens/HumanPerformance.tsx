@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { calculateSeismicVibration } from "../services/physicsCalculationService";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 type HumanPerformanceLabScreenProps = {
   onBack: () => void;
@@ -44,6 +45,7 @@ export default function HumanPerformanceLabScreen({
   onLogResults,
   hasDraft,
 }: HumanPerformanceLabScreenProps) {
+  const { colours, highContrast } = useAccessibility();
   const [isTracking, setIsTracking] = useState(false);
   const [selectedMovement, setSelectedMovement] = useState(1);
   const [vibration, setVibration] = useState(0.0);
@@ -61,6 +63,14 @@ export default function HumanPerformanceLabScreen({
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   );
+  const cardStyle = [
+  styles.sensorCard,
+  {
+    backgroundColor: colours.card,
+    borderColor: colours.border,
+    borderWidth: highContrast ? 3 : 1,
+  },
+];
 
   useEffect(() => {
     let subscription: any;
@@ -162,22 +172,24 @@ export default function HumanPerformanceLabScreen({
 
   return (
     <ScrollView
-      style={styles.scrollContainer}
+      style={[styles.scrollContainer, { backgroundColor: colours.background }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.phoneFrame}>
-        <Text style={styles.headerTitle}>Human Performance Lab</Text>
+      <View style={[styles.phoneFrame, { backgroundColor: colours.background }]}>
+        <Text style={[styles.headerTitle, { color: colours.text, fontSize: 24 * colours.textScale }]}>Human Performance Lab</Text>
 
-        <View style={styles.sensorCard}>
-          <Text style={styles.cardHeader}>Select Movement</Text>
+        <View style={cardStyle}>
+          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>Select Movement</Text>
           <View style={styles.movementRow}>
             {MOVEMENTS.map((m) => (
               <TouchableOpacity
                 key={m.id}
                 style={[
                   styles.movementButton,
-                  selectedMovement === m.id && styles.movementButtonActive,
+                  {borderColor: selectedMovement === m.id ? colours.primary : colours.border,
+                    borderWidth: highContrast ? 3 : 1.5,
+                    backgroundColor: selectedMovement === m.id ? colours.inactiveButton : colours.card,},
                 ]}
                 onPress={() => {
                   if (!isRecording) setSelectedMovement(m.id);
@@ -186,8 +198,7 @@ export default function HumanPerformanceLabScreen({
                 <Text
                   style={[
                     styles.movementButtonText,
-                    selectedMovement === m.id &&
-                      styles.movementButtonTextActive,
+                    { color: selectedMovement === m.id ? colours.primary : colours.text, fontSize: 14 * colours.textScale },
                   ]}
                 >
                   {m.label}
@@ -195,7 +206,7 @@ export default function HumanPerformanceLabScreen({
                 <Text
                   style={[
                     styles.movementDesc,
-                    selectedMovement === m.id && styles.movementDescActive,
+                    { color: selectedMovement === m.id ? colours.primary : colours.text, fontSize: 10 * colours.textScale },
                   ]}
                 >
                   {m.description}
@@ -205,29 +216,34 @@ export default function HumanPerformanceLabScreen({
           </View>
         </View>
 
-        <View style={styles.sensorCard}>
-          <Text style={styles.cardHeader}>Live Sensor Data</Text>
+        <View style={cardStyle}>
+          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>Live Sensor Data</Text>
           <View style={styles.metricsRow}>
             <View style={styles.metricColumn}>
-              <Text style={[styles.metricValue, { color: "#1d5db1" }]}>
+              <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                 {vibration.toFixed(2)}g
               </Text>
-              <Text style={styles.metricLabel}>Vibration</Text>
+              <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>
+                Vibration
+              </Text>
             </View>
 
             <View style={styles.metricColumn}>
-              <Text style={[styles.metricValue, { color: "red" }]}>
+              <Text style={[styles.metricValue, { color: colours.danger, fontSize: 26 * colours.textScale }]}>
                 {peakVibration.toFixed(2)}g
               </Text>
-              <Text style={styles.metricLabel}>Peak</Text>
+              <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>
+                Peak 
+              </Text>
             </View>
 
             <View style={styles.metricColumn}>
               <Text
                 style={[
                   styles.statusText,
-                  status === "RECORDING" && { color: "red" },
-                  status === "ATTEMPT SAVED" && { color: "#16a34a" },
+                  { color: colours.primary, fontSize: 14 * colours.textScale },
+                  status === "RECORDING" && { color: colours.danger },
+                  status === "ATTEMPT SAVED" && { color: colours.success },
                 ]}
               >
                 {isRecording ? `${countdown}s` : status}
@@ -236,8 +252,8 @@ export default function HumanPerformanceLabScreen({
           </View>
         </View>
 
-        <View style={[styles.sensorCard, { paddingBottom: 0 }]}>
-          <Text style={styles.cardHeader}>Vibration Chart (g)</Text>
+        <View style={[cardStyle, { paddingBottom: 0 }]}>
+          <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>Vibration Chart (g)</Text>
 
           <Text
             style={[
@@ -281,17 +297,17 @@ export default function HumanPerformanceLabScreen({
             segments={3}
             yAxisSuffix="g"
             chartConfig={{
-              backgroundColor: "#ffffff",
-              backgroundGradientFrom: "#ffffff",
-              backgroundGradientTo: "#ffffff",
+              backgroundColor: colours.card,
+              backgroundGradientFrom: colours.card,
+              backgroundGradientTo: colours.card,
               decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(29, 93, 177, ${opacity})`,
-              labelColor: () => "black",
+              color: () => colours.primary,
+              labelColor: () => colours.text,
               style: { borderRadius: 16 },
               propsForDots: {
                 r: "1",
                 strokeWidth: "1",
-                stroke: "#1d5db1",
+                stroke: colours.primary,
               },
             }}
             bezier
@@ -301,14 +317,14 @@ export default function HumanPerformanceLabScreen({
 
         {!isRecording ? (
           <TouchableOpacity
-            style={styles.trackingButton}
+            style={[styles.trackingButton, { backgroundColor: colours.success }]}
             onPress={startAttempt}
           >
             <Text style={styles.trackingButtonText}>Start Attempt</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.trackingButton, { backgroundColor: "#dc2626" }]}
+            style={[styles.trackingButton, { backgroundColor: colours.danger }]}
             onPress={stopEarly}
           >
             <Text style={styles.trackingButtonText}>■ Stop</Text>
@@ -316,16 +332,16 @@ export default function HumanPerformanceLabScreen({
         )}
 
         {attempts.length > 0 && (
-          <View style={[styles.sensorCard, {marginBottom:50}]}>
-            <Text style={styles.cardHeader}>Attempts</Text>
+          <View style={[cardStyle, { marginBottom: 50 }]}>
+            <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>Attempts</Text>
             {attempts.map((a, idx) => {
               return (
                 <View key={idx} style={styles.attemptRow}>
-                  <Text style={styles.attemptIndex}>#{idx + 1}</Text>
+                  <Text style={[styles.attemptIndex, { color: colours.primary, fontSize: 16 * colours.textScale }]}>#{idx + 1}</Text>
                   <View style={styles.attemptDetails}>
-                    <Text style={styles.attemptMovement}>
+                    <Text style={[styles.attemptMovement, { color: colours.text, fontSize: 14 * colours.textScale }]}>
                       {MOVEMENTS.find((m) => m.id === a.movementId)?.label}
-                      <Text style={styles.attemptStat}>
+                      <Text style={[styles.attemptStat, { color: colours.subText, fontSize: 11 * colours.textScale }]}>
                         {" • "}Avg: {a.avgVibration.toFixed(2)}g • Peak:{" "}
                         {a.peakVibration.toFixed(2)}g
                       </Text>
@@ -337,20 +353,20 @@ export default function HumanPerformanceLabScreen({
           </View>
         )}
 
-        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
+        <TouchableOpacity style={[styles.logButton, { backgroundColor: colours.card, borderColor: colours.border, borderWidth: highContrast ? 3 : 2, }]} onPress={onLogResults}>
           <View style={styles.logButtonContent}>
-            <Text style={styles.logButtonText}>Log Results</Text>
-            <Text style={styles.arrowIcon}>➔</Text>
+            <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
+            <Text style={[styles.arrowIcon, { color: colours.text, fontSize: 20 * colours.textScale }]}>➔</Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.bottomRow}>
-          <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-            <Text style={styles.bottomButtonText}>Quit</Text>
+          <TouchableOpacity style={[styles.quitButton, { backgroundColor: colours.danger, borderColor: colours.border, borderWidth: highContrast ? 3 : 2, }]} onPress={onBack}>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-            <Text style={styles.bottomButtonText}>Submit</Text>
+          <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2, }]} onPress={onSubmit}>
+            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
       </View>

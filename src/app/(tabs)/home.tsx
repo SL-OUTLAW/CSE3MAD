@@ -13,35 +13,94 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTeam } from "../../../context/TeamContext";
+import { useAccessibility } from "../../../context/AccessibilityContext";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { teamName, grade, teamId, rank, score } = useTeam();
+  const { colours, highContrast } = useAccessibility();
+
+  const themedCardStyle = [
+    styles.card,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
+
+  const titleTextStyle = {
+    color: colours.text,
+    fontSize: 28 * colours.textScale,
+  };
+
+  const cardTitleStyle = {
+    color: colours.text,
+    fontSize: 18 * colours.textScale,
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      edges={["top", "left", "right"]}
+    >
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Side Quest</Text>
-          <Text style={styles.subtitle}>Welcome,</Text>
-          <Text style={styles.smallText}>
+          <Text style={[styles.title, titleTextStyle]}>Side Quest</Text>
+
+          <Text
+            style={[
+              styles.subtitle,
+              { color: colours.text, fontSize: 20 * colours.textScale },
+            ]}
+          >
+            Welcome,
+          </Text>
+
+          <Text
+            style={[
+              styles.smallText,
+              { color: colours.subText, fontSize: 13 * colours.textScale },
+            ]}
+          >
             Team ID: {teamId || "Not saved yet"}
           </Text>
 
-          <View style={styles.card}>
+          <View style={themedCardStyle}>
             <View style={styles.cardTextGroup}>
               <Text
-                style={[styles.cardTitle, { fontSize: 24, marginBottom: 25 }]}
+                style={[
+                  styles.cardTitle,
+                  {
+                    color: colours.text,
+                    fontSize: 24 * colours.textScale,
+                    marginBottom: 25,
+                  },
+                ]}
               >
                 {teamName || "Team"} {rank ? `#${rank}` : "#unranked"}
               </Text>
-              <Text style={[styles.cardTitle, { fontSize: 20 }]}>
+
+              <Text
+                style={[
+                  styles.cardTitle,
+                  { color: colours.text, fontSize: 20 * colours.textScale },
+                ]}
+              >
                 Score : {score} points
               </Text>
-              <Text style={styles.cardText}>Grade : {grade}</Text>
+
+              <Text
+                style={[
+                  styles.cardText,
+                  { color: colours.subText, fontSize: 15 * colours.textScale },
+                ]}
+              >
+                Grade : {grade || "Not set"}
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -49,30 +108,25 @@ export default function HomeScreen() {
               activeOpacity={0.5}
               hitSlop={{ top: 55, bottom: 55, left: 0, right: 14 }}
             >
-              <Text style={styles.iconPlaceholder}>
-                <AntDesign name="right" size={24} color="black" />
-              </Text>
+              <AntDesign
+                name="right"
+                size={24 * colours.textScale}
+                color={colours.text}
+              />
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.card, { alignItems: "flex-start" }]}>
+          <View style={[themedCardStyle, styles.shortInfoCard]}>
             <View style={styles.cardTextGroup}>
-              <Text style={styles.cardTitle}>Recent</Text>
+              <Text style={[styles.cardTitle, cardTitleStyle]}>Recent</Text>
             </View>
           </View>
 
-          <View
-            style={[
-              styles.card,
-              {
-                height: 312,
-                marginBottom: 0,
-                alignItems: "flex-start",
-              },
-            ]}
-          >
+          <View style={[themedCardStyle, styles.upcomingCard]}>
             <View style={styles.cardTextGroup}>
-              <Text style={styles.cardTitle}>Upcoming challenges</Text>
+              <Text style={[styles.cardTitle, cardTitleStyle]}>
+                Upcoming challenges
+              </Text>
             </View>
           </View>
         </ScrollView>
@@ -82,7 +136,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f8fafc" },
+  safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
@@ -91,40 +145,25 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   title: {
-    fontSize: 28,
     fontWeight: "800",
     marginBottom: 12,
-    color: "#0f172a",
   },
   subtitle: {
-    fontSize: 20,
     fontWeight: "700",
     marginBottom: 4,
     marginTop: 4,
-    color: "#1e293b",
-  },
-  bodyText: {
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 12,
-    color: "#334155",
   },
   smallText: {
-    fontSize: 13,
     lineHeight: 18,
     marginBottom: 1,
-    color: "#64748b",
   },
   card: {
     width: "100%",
-    backgroundColor: "#ffffff",
     height: 145,
     padding: 16,
     paddingTop: 14,
     borderRadius: 14,
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -133,46 +172,24 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  shortInfoCard: {
+    alignItems: "flex-start",
+  },
+  upcomingCard: {
+    height: 312,
+    marginBottom: 0,
+    alignItems: "flex-start",
+  },
   cardTitle: {
-    fontSize: 18,
     fontWeight: "800",
     marginBottom: 12,
-    color: "#0f172a",
   },
   cardText: {
-    fontSize: 15,
     lineHeight: 21,
-    color: "#1f2937",
     marginBottom: 3,
   },
   cardTextGroup: {
     flexDirection: "column",
     flex: 1,
   },
-  iconPlaceholder: {
-    fontSize: 32,
-    marginLeft: 16,
-  },
-  primaryButton: {
-    width: "100%",
-    backgroundColor: "#2563eb",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  secondaryButton: {
-    width: "100%",
-    backgroundColor: "#ffffff",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#2563eb",
-  },
-  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "800" },
-  secondaryButtonText: { color: "#2563eb", fontSize: 16, fontWeight: "800" },
 });
