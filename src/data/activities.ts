@@ -7,7 +7,7 @@ export const activities = [
       "Students design, build, and test a parachute for a small toy to reduce its landing speed and impact force.",
     equipment: [
       "Mobile phone with Side Quest app",
-      "Small toy, e.g. army toy soldier",
+      "Small object, e.g. army toy soldier",
       "Table or elevated surface",
       "Paper or plastic",
       "String",
@@ -15,11 +15,11 @@ export const activities = [
       "Tape",
     ],
     instructions: [
-      "Drop the toy without a parachute and record the fall, as the baseline test.",
+      "Drop the toy without a parachute and record the fall.",
       "Build a parachute using provided materials.",
       "Drop the toy from the same height and record the fall.",
       "Review speed and landing accuracy results in the app.",
-      "Redesign and test up to three prototypes within 20 minutes.",
+      "Redesign and test up to three prototypes.",
       "Upload videos, results, and team reflections.",
     ],
   },
@@ -29,14 +29,33 @@ export const activities = [
     category: "Environmental Science",
     description:
       "Measure and compare sound levels in different classroom activities.",
-    tools: ["Sound reading", "GPS location", "Result comparison"],
+    equipment: [
+      "Mobile phone with Side Quest app",
+    ],
+    instructions: [
+      "Measure noise from different actions (e.g. dropping objects, talking, walking, stamping your feet).",
+      "Record sound levels and locations.",
+      "Map loud and quiet zones.",
+    ],
   },
   {
     id: "A3",
     title: "Hand Fan Challenge",
-    category: "Physics – Air Movement",
+    category: "Physics - Air Movement",
     description: "Test how air movement affects flexible materials.",
-    tools: ["Result entry", "Observation notes", "Rating"],
+    equipment: [
+      "Mobile phone with Side Quest app",
+      "Paper or Cardboard",
+      "Scissors",
+      "Sticky Tape"
+    ],
+    instructions: [
+      "Stand paper upright on a table.",
+      "Fan air from varying distances.",
+      "Observe and record movement.",
+      "Repeat with different fan designs and fan distance (15cm, 30, 45cm).",
+      "Repeat with different materials with varying thickness.",
+    ],
   },
   {
     id: "A4",
