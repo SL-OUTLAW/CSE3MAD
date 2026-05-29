@@ -3,18 +3,18 @@ import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
+  TouchableOpacity
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { useTeam } from "../../context/TeamContext";
 import { db, loginWithEmail } from "../services/firebase";
+import { saveUserSession } from "../services/userSessionService";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -40,16 +40,36 @@ export default function LoginScreen() {
 
       const teamSnapshot = await getDocs(teamQuery);
 
+      let savedTeamId = "";
+      let savedTeamName = "";
+      let savedGrade = "";
+      let savedMembers: string[] = [];
+
       if (!teamSnapshot.empty) {
         const teamDoc = teamSnapshot.docs[0];
         const teamData = teamDoc.data();
         const members = Array.isArray(teamData.members) ? teamData.members : [];
 
-        setTeamId(teamDoc.id);
-        setTeamName(String(teamData.teamName ?? ""));
-        setGrade(String(teamData.grade ?? ""));
-        setTeamMembers(members);
+        savedTeamId = teamDoc.id;
+        savedTeamName = String(teamData.teamName ?? "");
+        savedGrade = String(teamData.grade ?? "");
+        savedMembers = members;
+
+        setTeamId(savedTeamId);
+        setTeamName(savedTeamName);
+        setGrade(savedGrade);
+        setTeamMembers(savedMembers);
       }
+
+      await saveUserSession({
+        uid: user.uid,
+        email: user.email,
+        teamId: savedTeamId,
+        teamName: savedTeamName,
+        grade: savedGrade,
+        teamMembers: savedMembers,
+        savedAt: new Date().toISOString(),
+      });
 
       Alert.alert("Login successful", "Welcome back.", [
         { text: "OK", onPress: () => router.replace("../(tabs)/home") },
@@ -94,7 +114,6 @@ export default function LoginScreen() {
           <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
             <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() => router.replace("/")}

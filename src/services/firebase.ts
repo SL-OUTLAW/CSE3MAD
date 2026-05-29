@@ -4,6 +4,7 @@ import {
   getAuth,
   signInAnonymously,
   signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -35,4 +36,8 @@ export async function registerWithEmail(email: string, password: string) {
 export async function loginWithEmail(email: string, password: string) {
   const result = await signInWithEmailAndPassword(auth, email, password);
   return result.user;
+}
+
+export async function logoutUser() {
+  await signOut(auth);
 }
