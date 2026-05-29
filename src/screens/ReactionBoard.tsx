@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { router, useLocalSearchParams, useRouter } from "expo-router";
-
 import {
   Animated,
   LayoutChangeEvent,
@@ -12,14 +10,12 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle, G, Line } from "react-native-svg";
-import { calculateReactionResult } from "../services/physicsCalculationService";
-import { useAccessibility } from "../../context/AccessibilityContext";
 import {
-  loadDraft,
-  clearDraft,
-  saveResultOffline,
-  syncPendingResultsToFirebase,
-} from "../services/resultStorageService";
+  calculateReactionResult,
+  calculateTraceAccuracy,
+  Point,
+} from "../services/physicsCalculationService";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 type ReactionBoardScreenProps = {
   onBack: () => void;
@@ -32,11 +28,10 @@ type ReactionBoardScreenProps = {
 
 const TRACE_RADIUS = 100;
 const TOLERANCE = 28;
+const ANGLE_TOLERANCE = 30; // degrees
 
 type Phase = "phase1" | "phase2" | "phase3";
 type TapState = "idle" | "waiting" | "ready" | "tapped" | "toosoon";
-
-type Point = { x: number; y: number };
 
 type ReactionAttempt = {
   phase: Phase;
@@ -63,7 +58,7 @@ function TraceCanvas({
 }: TraceCanvasProps) {
   const [size, setSize] = useState(0);
   const pathRef = useRef<Point[]>([]);
-  const [renderPath, setRenderPath] = useState<Point[]>([]);
+  const [renderPath, setRenderPath] = useState<{ x: number; y: number }[]>([]);
   const activeRef = useRef(active);
   const sizeRef = useRef(0);
   const canvasOriginRef = useRef<{ px: number; py: number }>({ px: 0, py: 0 });
@@ -78,7 +73,7 @@ function TraceCanvas({
   const movingX = cx + TRACE_RADIUS * Math.cos((dotAngle * Math.PI) / 180);
   const movingY = cy + TRACE_RADIUS * Math.sin((dotAngle * Math.PI) / 180);
 
-  const guidePoints: Point[] = Array.from({ length: 60 }, (_, i) => ({
+  const guidePoints: { x: number; y: number }[] = Array.from({ length: 60 }, (_, i) => ({
     x: cx + TRACE_RADIUS * Math.cos(((i / 60) * 360 * Math.PI) / 180),
     y: cy + TRACE_RADIUS * Math.sin(((i / 60) * 360 * Math.PI) / 180),
   }));
@@ -105,9 +100,11 @@ function TraceCanvas({
         const x = e.nativeEvent.pageX - canvasOriginRef.current.px;
         const y = e.nativeEvent.pageY - canvasOriginRef.current.py;
         if (x < 0 || y < 0 || x > s || y > s) return;
-        pathRef.current = [{ x, y }];
+        const now = performance.now();
+        const newPoint: Point = { x, y, timestamp: now };
+        pathRef.current = [newPoint];
         setRenderPath([{ x, y }]);
-        onPathUpdate([{ x, y }]);
+        onPathUpdate([newPoint]);
       },
 
       onPanResponderMove: (e) => {
@@ -116,9 +113,11 @@ function TraceCanvas({
         const x = e.nativeEvent.pageX - canvasOriginRef.current.px;
         const y = e.nativeEvent.pageY - canvasOriginRef.current.py;
         if (x < 0 || y < 0 || x > s || y > s) return;
-        const next = [...pathRef.current, { x, y }];
+        const now = performance.now();
+        const newPoint: Point = { x, y, timestamp: now };
+        const next = [...pathRef.current, newPoint];
         pathRef.current = next;
-        setRenderPath(next);
+        setRenderPath(next.map(p => ({ x: p.x, y: p.y })));
         onPathUpdate(next);
       },
 
@@ -248,19 +247,14 @@ export default function ReactionBoardScreen({
     setTraceActive(false);
     traceActiveRef.current = false;
 
-    const total = path.length;
-    if (total === 0) return;
-
-    const cx = canvasSize / 2;
-    const cy = canvasSize / 2;
-
-    const accurate = path.filter(({ x, y }) => {
-      const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-      return Math.abs(dist - TRACE_RADIUS) < TOLERANCE;
-    }).length;
-
-    const accuracyPercent = Math.round((accurate / total) * 100);
-    const durationMs = Date.now() - traceStartRef.current;
+    const { accuracyPercent, durationMs } = calculateTraceAccuracy({
+      path,
+      canvasSize,
+      traceStartTime: traceStartRef.current,
+      traceRadius: TRACE_RADIUS,
+      tolerance: TOLERANCE,
+      angleTolerance: ANGLE_TOLERANCE,
+    });
 
     calculateReactionResult({ accuracyPercent, durationMs }).then((result) => {
       setLastAccuracy(result.accuracyPercent);
@@ -273,7 +267,7 @@ export default function ReactionBoardScreen({
     dotAngleRef.current = 0;
     setDotAngle(0);
     setTraceStatus("TRACING");
-    traceStartRef.current = Date.now();
+    traceStartRef.current = performance.now();
     setCanvasKey((k) => k + 1);
     traceActiveRef.current = true;
     setTraceActive(true);
@@ -284,8 +278,8 @@ export default function ReactionBoardScreen({
     setReactionStatus("WAIT...");
     const delay = Math.floor(Math.random() * 2500) + 1500;
     timeoutRef.current = setTimeout(() => {
+      startTimeRef.current = performance.now();
       setTapState("ready");
-      startTimeRef.current = Date.now();
       setReactionStatus("TAP NOW!");
     }, delay);
   };
@@ -296,12 +290,12 @@ export default function ReactionBoardScreen({
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setTapState("toosoon");
       setReactionStatus("TOO SOON!");
-
       return;
     }
     if (tapState === "ready") {
-      const elapsed = Date.now() - startTimeRef.current;
-      calculateReactionResult({ reactionTimeMs: elapsed }).then((result) => {
+      const elapsed = performance.now() - startTimeRef.current;
+      const roundedMs = Math.round(elapsed);
+      calculateReactionResult({ reactionTimeMs: roundedMs }).then((result) => {
         setReactionTimeMs(result.reactionTimeMs);
         setReactionStatus(result.reactionStatus);
         setTapState("tapped");
@@ -396,7 +390,7 @@ export default function ReactionBoardScreen({
               <View style={styles.metricsRow}>
                 <View style={styles.metricColumn}>
                   <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
-                    {reactionTimeMs > 0 ? `${reactionTimeMs}ms` : "-"}
+                    {reactionTimeMs > 0 ? `${Math.round(reactionTimeMs)}ms` : "-"}
                   </Text>
                   <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Reaction</Text>
                 </View>
@@ -466,7 +460,9 @@ export default function ReactionBoardScreen({
                     <Text style={[styles.attemptDetail, { color: colours.text, fontSize: 14 * colours.textScale }]}>
                       {a.phase === "phase1" ? "Dominant" : "Non-dominant"} hand
                     </Text>
-                    <Text style={[styles.attemptTime, { color: colours.success, fontSize: 14 * colours.textScale }]}>{a.reactionTimeMs}ms</Text>
+                    <Text style={[styles.attemptTime, { color: colours.success, fontSize: 14 * colours.textScale }]}>
+                      {Math.round(a.reactionTimeMs)}ms
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -529,7 +525,7 @@ export default function ReactionBoardScreen({
                   <View key={i} style={styles.attemptRow}>
                     <Text style={[styles.attemptIndex, { color: colours.primary, fontSize: 14 * colours.textScale }]}>#{i + 1}</Text>
                     <Text style={[styles.attemptDetail, { color: colours.text, fontSize: 14 * colours.textScale }]}>
-                      {a.durationMs}ms duration
+                      {Math.round(a.durationMs)}ms duration
                     </Text>
                     <Text style={[styles.attemptTime, { color: colours.success, fontSize: 14 * colours.textScale }]}>{a.accuracyPercent}%</Text>
                   </View>
@@ -557,7 +553,7 @@ export default function ReactionBoardScreen({
               <View style={styles.metricColumn}>
                 <Text style={[styles.metricValue, { color: colours.warning, fontSize: 26 * colours.textScale }]}>
                   {Math.abs(
-                    avgReaction(p1Attempts)! - avgReaction(p2Attempts)!,
+                    (avgReaction(p1Attempts) || 0) - (avgReaction(p2Attempts) || 0),
                   ) || 0}
                   ms
                 </Text>
@@ -622,17 +618,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  phaseTabActive: {
-    borderColor: "#1d5db1",
-    backgroundColor: "#eff6ff",
-  },
   phaseTabText: {
     fontSize: 13,
     fontWeight: "700",
     color: "#666666",
-  },
-  phaseTabTextActive: {
-    color: "#1d5db1",
   },
   sensorCard: {
     borderWidth: 1,
