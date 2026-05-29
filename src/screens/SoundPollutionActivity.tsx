@@ -280,12 +280,11 @@ export default function SoundPollutionActivity({
             <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
           </View>
         </TouchableOpacity>
-
         <View style={styles.bottomRow}>
-          <TouchableOpacity style={[styles.quitButton, { borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onBack}>
-            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Quit</Text>
+          <TouchableOpacity style={[styles.quitButton, { backgroundColor: colours.danger, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onBack}>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.submitButton, { borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
+          <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
             <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
