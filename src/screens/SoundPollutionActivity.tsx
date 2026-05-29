@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import { LineChart } from "react-native-chart-kit";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 type SubmitParams = Record<string, string>;
 
@@ -50,6 +51,7 @@ export default function SoundPollutionActivity({
   onLogResults,
   onSubmit,
 }: SoundPollutionActivityProps) {
+  const { colours, highContrast } = useAccessibility();
   const recordingRef = useRef<Audio.Recording | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -58,6 +60,14 @@ export default function SoundPollutionActivity({
   const [currentDb, setCurrentDb] = useState(0);
   const [dbHistory, setDbHistory] = useState<number[]>([0, 0, 0, 0, 0]);
   const [sensorStatus, setSensorStatus] = useState("SENSOR ACTIVE");
+  const cardStyle = [
+    styles.sensorCard,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
 
   const result = useMemo(() => {
     return {
@@ -165,52 +175,63 @@ export default function SoundPollutionActivity({
   }, []);
 
   return (
-    <View style={styles.outerContainer}>
-      <ScrollView style={styles.phoneFrame} showsVerticalScrollIndicator={false}>
-        <Text style={styles.headerTitle}>Sound Pollution Hunter</Text>
+    <View style={[styles.outerContainer, { backgroundColor: colours.background }]}>
+      <ScrollView
+        style={[styles.phoneFrame, { backgroundColor: colours.background }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.headerTitle, { color: colours.text, fontSize: 22 * colours.textScale }]}>Sound Pollution Hunter</Text>
 
-        <View style={[styles.sensorCard, { height: 200 }]}>
-          <Text style={styles.cardHeader}>Live Sensor Data</Text>
+        <View style={[cardStyle, { minHeight: 200 }]}>
+          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>Live Sensor Data</Text>
 
           <View style={styles.metricsRow}>
             <View style={styles.metricColumn}>
-              <Text style={styles.metricValue}>{currentDb} dB</Text>
-              <Text style={styles.metricLabel}>Current dB</Text>
+              <Text style={[styles.metricValue, { color: colours.primary, fontSize: 22 * colours.textScale }]}>{currentDb} dB</Text>
+              <Text style={[styles.metricValue, { color: colours.primary, fontSize: 13 * colours.textScale }]}>Current dB</Text>
             </View>
 
             <View style={styles.metricColumn}>
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
                 style={[
                   styles.statusText,
-                  (result.level.includes("HIGH") ||
-                    result.level === "DANGEROUS") && {
-                    color: "#dc2626",
+                  {
+                    color:
+                  (result.level.includes("HIGH") || result.level === "DANGEROUS"
+                      ? colours.danger
+                      : colours.primary),
+                      fontSize: 16 * colours.textScale,
                   },
                 ]}
               >
                 {result.level}
               </Text>
-              <Text style={styles.metricLabel}>Level</Text>
+              <Text style={[styles.metricLabel, { color: colours.subText, fontSize: 13 * colours.textScale }]}>Level</Text>
             </View>
 
             <View style={styles.metricColumn}>
-              <Text style={styles.metricValue}>{result.peakDb} dB</Text>
-              <Text style={styles.metricLabel}>Peak</Text>
+              <Text style={[styles.metricValue, { color: colours.primary, fontSize: 22 * colours.textScale }]}>{result.peakDb} dB</Text>
+              <Text style={[styles.metricLabel, { color: colours.subText, fontSize: 13 * colours.textScale }]}>Peak</Text>
             </View>
           </View>
           <Text
             style={[
               styles.sensorText,
-              sensorStatus === "SENSOR ACTIVE" && { color: "#1d5db1" },
+              { 
+                color: sensorStatus === "SENSOR ACTIVE" ? colours.primary : colours.danger,
+                fontSize: 15 * colours.textScale,
+              },
             ]}
           >
             {sensorStatus}
           </Text>
         </View>
 
-        <View style={[styles.sensorCard, { paddingBottom: 0 }]}>
-          <Text style={styles.cardHeader}>Sound Chart (dB)</Text>
-          <Text style={styles.peakText}>Peak: {result.peakDb} dB</Text>
+        <View style={[cardStyle, { paddingBottom: 0 }]}>
+          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>Sound Chart (dB)</Text>
+          <Text style={[styles.peakText, { color: colours.danger, fontSize: 14 * colours.textScale }]}>Peak: {result.peakDb} dB</Text>
 
           <LineChart
             data={{
@@ -222,17 +243,17 @@ export default function SoundPollutionActivity({
             segments={3}
             yAxisSuffix="dB"
             chartConfig={{
-              backgroundColor: "#ffffff",
-              backgroundGradientFrom: "#ffffff",
-              backgroundGradientTo: "#ffffff",
+              backgroundColor: colours.card,
+              backgroundGradientFrom: colours.card,
+              backgroundGradientTo: colours.card,
               decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(29, 93, 177, ${opacity})`,
-              labelColor: () => "black",
+              color: () => colours.primary,
+              labelColor: () => colours.text,
               style: { borderRadius: 16 },
               propsForDots: {
                 r: "2",
                 strokeWidth: "1",
-                stroke: "#1d5db1",
+                stroke: colours.primary,
               },
             }}
             bezier
@@ -243,8 +264,8 @@ export default function SoundPollutionActivity({
           />
         </View>
 
-        <TouchableOpacity style={styles.trackingButton} onPress={toggleReading}>
-          <Text style={styles.trackingButtonText}>
+        <TouchableOpacity style={[styles.trackingButton, { backgroundColor: colours.primary }]} onPress={toggleReading}>
+          <Text style={[styles.trackingButtonText, { fontSize: 20 * colours.textScale }]}>
             {isReading
               ? "Pause reading"
               : hasStarted
@@ -253,19 +274,18 @@ export default function SoundPollutionActivity({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logButton} onPress={handleLogResults}>
+        <TouchableOpacity style={[styles.logButton, { borderColor: colours.border, backgroundColor: colours.card, borderWidth: highContrast ? 3 : 2 }]} onPress={handleLogResults}>
           <View style={styles.logButtonContent}>
-            <Text style={styles.logButtonText}>Log Results</Text>
-            <Text style={styles.arrowIcon}>➔</Text>
+            <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
+            <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
           </View>
         </TouchableOpacity>
-
         <View style={styles.bottomRow}>
-          <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-            <Text style={styles.bottomButtonText}>Quit</Text>
+          <TouchableOpacity style={[styles.quitButton, { backgroundColor: colours.danger, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onBack}>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-            <Text style={styles.bottomButtonText}>Submit</Text>
+          <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
+            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -351,7 +371,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#dc2626",
     fontWeight: "800",
-    marginTop: 30,
+    marginTop: 16,
   },
   peakText: {
     fontSize: 14,

@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useRouter } from "expo-router";
+import React from "react";
 import {
   KeyboardAvoidingView,
   ScrollView,
@@ -11,10 +11,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Feather from "@expo/vector-icons/Feather";
 import { useTeam } from "../../context/TeamContext";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 export default function ResultsScreen() {
   const router = useRouter();
   const { teamName, grade, teamId, rank, score, teamMembers } = useTeam();
+  const { colours, highContrast } = useAccessibility();
+  const normalTextStyle = [
+    styles.text,
+    { color: colours.text, fontSize: 16 * colours.textScale },
+  ];
 
   const badgesMock = [
     { id: 1, earned: false },
@@ -32,7 +38,7 @@ export default function ResultsScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colours.background }]} edges={["top", "left", "right"]}>
       <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -42,31 +48,34 @@ export default function ResultsScreen() {
             style={styles.backButton}
             onPress={() => router.push("../(tabs)/home")}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={[styles.backText, { color: colours.primary, fontSize: 18* colours.textScale },
+              ]}>‹ Back</Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>Team</Text>
+          <Text style={[styles.title, { color: colours.text, fontSize: 28 * colours.textScale }]}>
+            Team
+          </Text>
 
-          <Text style={[styles.text, { marginBottom: 0 }]}>
+          <Text style={[normalTextStyle, { marginBottom: 0 }]}>
             Team : {teamName}
           </Text>
           <Text
             style={[
               styles.text,
-              { fontSize: 11, color: "#64748b", marginBottom: 8 },
+              { fontSize: 11 * colours.textScale, color: colours.subText, marginBottom: 8 },
             ]}
           >
             Team ID : {teamId}
           </Text>
-          <Text style={styles.text}>Grade : {grade}</Text>
-          <Text style={styles.text}>Score : {score}</Text>
-          <Text style={styles.text}>Rank : {rank}</Text>
-          <Text style={styles.text}>
+          <Text style={normalTextStyle}>Grade : {grade}</Text>
+          <Text style={normalTextStyle}>Score : {score}</Text>
+          <Text style={normalTextStyle}>Rank : {rank}</Text>
+          <Text style={normalTextStyle}>
             Members :{" "}
             {teamMembers.length > 0 ? teamMembers.join(", ") : "None listed"}
           </Text>
 
-          <Text style={[styles.title, { marginTop: 20 }]}>Badges</Text>
+          <Text style={[styles.title, { color: colours.text, fontSize: 28 * colours.textScale, marginTop: 20 }]}>Badges</Text>
 
           <View style={styles.gridContainer}>
             {badgesMock.map((badge) => (
@@ -75,11 +84,20 @@ export default function ResultsScreen() {
                 style={[
                   styles.squarePlaceholder,
                   badge.earned ? styles.badgeEarned : styles.badgeLocked,
+                  {
+                    borderWidth: highContrast ? 3 : 1,
+                    borderColor: colours.border,
+                    backgroundColor: badge.earned ? colours.card : colours.inactiveButton,
+                  },
                 ]}
               >
                 {badge.earned && (
                   <Text style={styles.checkmark}>
-                    <Feather name="check" size={24} color="green" />
+                    <Feather
+                      name="check"
+                      size={24 * colours.textScale}
+                      color={colours.success}
+                    />
                   </Text>
                 )}
               </View>

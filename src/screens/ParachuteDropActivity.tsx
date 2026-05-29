@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import Slider from "@react-native-community/slider";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 type SubmitParams = Record<string, string>;
 
@@ -35,6 +36,7 @@ function round(value: number, decimals = 2) {
 const G = 9.81;
 
 export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }: Props) {
+  const { colours, highContrast } = useAccessibility();
   const [attempt, setAttempt] = useState("");
   const [height, setHeight] = useState("");
   const [mass, setMass] = useState("");
@@ -52,8 +54,25 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
   const [currentPosition, setCurrentPosition] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const cardStyle = [
+    styles.card,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
 
-  
+  const inputStyle = [
+    styles.input,
+    {
+      color: colours.text,
+      borderColor: colours.border,
+      backgroundColor: colours.background,
+      fontSize: 16 * colours.textScale,
+    },
+  ];
+
   useEffect(() => {
     if (videoUri) {
       setIsVideoLoading(true);
@@ -202,17 +221,17 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
   };
 
   return (
-    <View style={styles.outer}>
+    <View style={[styles.outer, { backgroundColor: colours.background }]}>
       <KeyboardAvoidingView
-        style={styles.frame}
+        style={[styles.frame, { backgroundColor: colours.background }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Parachute Drop Challenge</Text>
+          <Text style={[styles.title, { color: colours.text, fontSize: 22 * colours.textScale }]}>Parachute Drop Challenge</Text>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Slow-motion Video Player</Text>
-            <Text style={styles.helpText}>
+          <View style={cardStyle}>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Slow-motion Video Player</Text>
+            <Text style={[styles.helpText, { color: colours.subText, fontSize: 14 * colours.textScale }]}>
               Record or select a video to view in slow motion. {"\n"}Use the speed slider to slow down playback.
             </Text>
 
@@ -245,29 +264,29 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
                 )}
 
                 <View style={styles.timeContainer}>
-                  <Text style={styles.timeText}>{(currentPosition / 1000).toFixed(2)}s</Text>
-                  <Text style={styles.timeText}>{(videoDuration / 1000).toFixed(2)}s</Text>
+                  <Text style={[styles.timeText, { color: colours.text, fontSize: 14 * colours.textScale }]}>{(currentPosition / 1000).toFixed(2)}s</Text>
+                  <Text style={[styles.timeText, { color: colours.text, fontSize: 14 * colours.textScale }]}>{(videoDuration / 1000).toFixed(2)}s</Text>
                 </View>
 
-                <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
+                <TouchableOpacity style={[styles.playButton, { backgroundColor: colours.primary }]} onPress={handlePlayPause}>                  
                   <Text style={styles.playButtonText}>{isPlaying ? "Pause" : "Play"}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.sliderRow}>
-                  <Text style={styles.sliderLabel}>Seek</Text>
+                  <Text style={[styles.sliderLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Seek</Text>
                   <Slider
                     style={[styles.slider, { marginRight: 45 }]}
                     minimumValue={0}
                     maximumValue={videoDuration}
                     value={currentPosition}
                     onSlidingComplete={handleSeek}
-                    minimumTrackTintColor="#1d5db1"
-                    maximumTrackTintColor="#cbd5e1"
+                    minimumTrackTintColor={colours.primary}
+                    maximumTrackTintColor={colours.border}
                   />
                 </View>
 
                 <View style={styles.sliderRow}>
-                  <Text style={styles.sliderLabel}>Speed</Text>
+                  <Text style={[styles.sliderLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Speed</Text>
                   <Slider
                     style={styles.slider}
                     minimumValue={0.1}
@@ -275,127 +294,159 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
                     step={0.01}
                     value={playbackSpeed}
                     onValueChange={handleSpeedChange}
-                    minimumTrackTintColor="#1d5db1"
-                    maximumTrackTintColor="#cbd5e1"
+                    minimumTrackTintColor={colours.primary}
+                    maximumTrackTintColor={colours.border}
                   />
-                  <Text style={styles.speedText}>{playbackSpeed.toFixed(2)}x</Text>
+                  <Text style={[styles.speedText, { color: colours.primary, fontSize: 14 * colours.textScale }]}>{playbackSpeed.toFixed(2)}x</Text>
                 </View>
               </View>
             ) : (
-              <Text style={styles.videoStatus}>No video attached yet</Text>
+              <Text style={[styles.videoStatus, { color: colours.subText, fontSize: 14 * colours.textScale }]}>No video attached yet</Text>
             )}
 
-            <View style={[styles.row, { marginTop: 20}]}>
-              <TouchableOpacity style={styles.outlineButton} onPress={recordVideo}>
-                <Text style={styles.outlineButtonText}>Record Video</Text>
+            <View style={[styles.row, { marginTop: 20 }]}>
+              <TouchableOpacity
+                style={[
+                  styles.outlineButton,
+                  {
+                    borderColor: colours.primary,
+                    borderWidth: highContrast ? 3 : 1,
+                  },
+                ]}
+                onPress={recordVideo}
+              >
+                <Text
+                  style={[
+                    styles.outlineButtonText,
+                    { color: colours.primary, fontSize: 15 * colours.textScale },
+                  ]}
+                >
+                  Record Video
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.outlineButton} onPress={chooseSlowMoVideo}>
-                <Text style={styles.outlineButtonText}>Choose Video</Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.outlineButton,
+                  {
+                    borderColor: colours.primary,
+                    borderWidth: highContrast ? 3 : 1,
+                  },
+                ]}
+                onPress={chooseSlowMoVideo}
+              >
+                <Text
+                  style={[
+                    styles.outlineButtonText,
+                    { color: colours.primary, fontSize: 15 * colours.textScale },
+                  ]}
+                >
+                  Choose Video
+                </Text>
               </TouchableOpacity>
             </View>
 
             
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Measurements</Text>
+          <View style={cardStyle}>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Measurements</Text>
 
-            <Text style={styles.label}>Drop height (m)</Text>
+            <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Drop height (m)</Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={height}
               onChangeText={setHeight}
               keyboardType="decimal-pad"
               placeholder="e.g. 1.2"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colours.subText}
             />
 
-            <Text style={styles.label}>Mass (kg)</Text>
+            <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Mass (kg)</Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={mass}
               onChangeText={setMass}
               keyboardType="decimal-pad"
               placeholder="e.g. 0.05"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colours.subText}
             />
 
-            <Text style={styles.label}>Time to first hit ground (s)</Text>
+            <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Time to first hit ground (s)</Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={fallTime}
               onChangeText={setFallTime}
               keyboardType="decimal-pad"
               placeholder="e.g. 0.5"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colours.subText}
             />
 
-            <Text style={styles.label}>Contact time (first hit → stop) (s)</Text>
+            <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Contact time (first hit → stop) (s)</Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={stopTime}
               onChangeText={setStopTime}
               keyboardType="decimal-pad"
               placeholder="e.g. 0.05"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colours.subText}
             />
 
             <View style={[styles.switchRow, { marginBottom: 5 }]}>
-              <Text style={[styles.label, { color: bounced ? "#1d5db1" : "#000000" }]}>Bounce</Text>
+              <Text style={[styles.label, { color: bounced ? colours.primary : colours.text, fontSize: 14 * colours.textScale }]}>Bounce</Text>
               <Switch value={bounced} onValueChange={setBounced} />
             </View>
 
             {bounced && (
               <>
-                <Text style={styles.label}>Time from separation to maximum height (s)</Text>
+                <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Time from separation to maximum height (s)</Text>
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   value={timeToMaxHeight}
                   onChangeText={setTimeToMaxHeight}
                   keyboardType="decimal-pad"
                   placeholder="e.g. 0.15"
-                  placeholderTextColor="#64748b"
+                  placeholderTextColor={colours.subText}
                 />
               </>
             )}
           </View>
 
-          <View style={[styles.card, { marginBottom: 40 }]}>
-            <Text style={styles.cardTitle}>Calculated Results</Text>
+          <View style={[cardStyle, { marginBottom: 40 }]}>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Calculated Results</Text>
             <View style={styles.row}>
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{round(result.velocity)} m/s</Text>
-                <Text style={styles.metricLabel}>Impact Velocity</Text>
+                <Text style={[styles.metricValue, { color: colours.primary, fontSize: 24 * colours.textScale }]}>{round(result.velocity)} m/s</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Impact Velocity</Text>
               </View>
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{round(result.gForce)}g</Text>
-                <Text style={styles.metricLabel}>G-force</Text>
+                <Text style={[styles.metricValue, { color: colours.primary, fontSize: 24 * colours.textScale }]}>{round(result.gForce)}g</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>G-force</Text>
               </View>
             </View>
-            <Text style={styles.resultText}>Acceleration: {round(result.acceleration)} m/s²</Text>
-            <Text style={styles.resultText}>Weight force: {round(result.weightForce)} N</Text>
-            <Text style={styles.resultText}>Net force: {round(result.netForce)} N</Text>
-            <Text style={styles.resultText}>Drag force: {round(result.dragForce)} N</Text>
+            <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Acceleration: {round(result.acceleration)} m/s²</Text>
+            <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Weight force: {round(result.weightForce)} N</Text>
+            <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Net force: {round(result.netForce)} N</Text>
+            <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Drag force: {round(result.dragForce)} N</Text>
             {bounced && (
-              <Text style={styles.resultText}>Δv (impact + upward): {round(result.deltaV)} m/s</Text>
+              <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Δv (impact + upward): {round(result.deltaV)} m/s</Text>
             )}
           </View>
 
-          <TouchableOpacity style={styles.logButton} onPress={handleLogResults}>
+          <TouchableOpacity style={[styles.logButton, { borderColor: colours.border, backgroundColor: colours.card, borderWidth: highContrast ? 3 : 2 }]} onPress={handleLogResults}>
             <View style={styles.logButtonContent}>
-              <Text style={styles.logButtonText}>Log Results</Text>
-              <Text style={styles.arrowIcon}>➔</Text>
+              <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
+              <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
             </View>
           </TouchableOpacity>
-
-          <View style={styles.bottomRow}>
-            <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-              <Text style={styles.bottomButtonText}>Quit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-              <Text style={styles.bottomButtonText}>Submit</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.bottomRow}>
+          <TouchableOpacity style={[styles.quitButton, { backgroundColor: colours.danger, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onBack}>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
+            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
+          </TouchableOpacity>
+        </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -487,10 +538,6 @@ logButton: {
   arrowIcon: {
     fontSize: 20,
     color: "#999999",
-  },
-ow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
   quitButton: {
     backgroundColor: "#F08787",

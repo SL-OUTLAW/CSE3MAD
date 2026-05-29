@@ -1,24 +1,26 @@
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
 import { Home, ListChecks, Trophy, UserCircle } from "lucide-react-native";
+import { useAccessibility } from "../../../context/AccessibilityContext";
 
 export default function TabLayout() {
+  const { colours, highContrast } = useAccessibility();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#2563eb",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: colours.primary,
+        tabBarInactiveTintColor: colours.subText,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e2e8f0",
-          borderTopWidth: 1,
+          backgroundColor: colours.card,
+          borderTopColor: colours.border,
+          borderTopWidth: highContrast ? 3 : 1,
           height: 80,
           paddingBottom: 10,
           paddingTop: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 12 * colours.textScale,
           fontWeight: "600",
         },
       }}

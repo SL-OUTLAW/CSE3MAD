@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import { useAccessibility } from "../../context/AccessibilityContext";
 import {
   BreathingDetectionState,
   createBreathingDetectionState,
@@ -229,6 +230,8 @@ function AttemptModal({
   attemptNumber: number;
   onClose: () => void;
 }) {
+  const { colours, highContrast } = useAccessibility();
+
   if (!attempt) return null;
   const modalChartWidth = SCREEN_WIDTH - 88;
 
@@ -241,14 +244,40 @@ function AttemptModal({
       presentationStyle="overFullScreen"
     >
       <View style={modalStyles.overlay}>
-        <View style={modalStyles.sheet}>
+        <View
+          style={[
+            modalStyles.sheet,
+            {
+              backgroundColor: colours.card,
+              borderColor: colours.border,
+              borderTopWidth: highContrast ? 3 : 0,
+            },
+          ]}
+        >
           <View style={modalStyles.header}>
-            <Text style={modalStyles.title}>Attempt #{attemptNumber}</Text>
-            <TouchableOpacity style={modalStyles.closeBtn} onPress={onClose}>
+            <Text
+              style={[
+                modalStyles.title,
+                { color: colours.text, fontSize: 22 * colours.textScale },
+              ]}
+            >
+              Attempt #{attemptNumber}
+            </Text>
+            <TouchableOpacity
+              style={[
+                modalStyles.closeBtn,
+                {
+                  backgroundColor: colours.background,
+                  borderColor: colours.border,
+                  borderWidth: highContrast ? 2 : 0,
+                },
+              ]}
+              onPress={onClose}
+            >
               <Text
                 style={[
                   modalStyles.closeBtnText,
-                  { color: "black", fontWeight: "700" },
+                  { color: colours.text, fontWeight: "700" },
                 ]}
               >
                 ✕
@@ -260,22 +289,74 @@ function AttemptModal({
             showsVerticalScrollIndicator={false}
             style={{ maxHeight: 420 }}
           >
-            <View style={modalStyles.bpmSummary}>
+            <View
+              style={[
+                modalStyles.bpmSummary,
+                {
+                  backgroundColor: colours.background,
+                  borderColor: colours.border,
+                  borderWidth: highContrast ? 3 : 1,
+                },
+              ]}
+            >
               <View style={modalStyles.bpmCard}>
-                <Text style={modalStyles.bpmLabel}>Rest BPM</Text>
-                <Text style={[modalStyles.bpmValue, { color: "#2563eb" }]}>
+                <Text
+                  style={[
+                    modalStyles.bpmLabel,
+                    {
+                      color: colours.subText,
+                      fontSize: 14 * colours.textScale,
+                    },
+                  ]}
+                >
+                  Rest BPM
+                </Text>
+                <Text
+                  style={[
+                    modalStyles.bpmValue,
+                    {
+                      color: colours.primary,
+                      fontSize: 32 * colours.textScale,
+                    },
+                  ]}
+                >
                   {attempt.restBpm}
                 </Text>
               </View>
               <View style={modalStyles.bpmCard}>
-                <Text style={modalStyles.bpmLabel}>Exercise BPM</Text>
-                <Text style={[modalStyles.bpmValue, { color: "#dc2626" }]}>
+                <Text
+                  style={[
+                    modalStyles.bpmLabel,
+                    {
+                      color: colours.subText,
+                      fontSize: 14 * colours.textScale,
+                    },
+                  ]}
+                >
+                  Exercise BPM
+                </Text>
+                <Text
+                  style={[
+                    modalStyles.bpmValue,
+                    {
+                      color: colours.danger,
+                      fontSize: 32 * colours.textScale,
+                    },
+                  ]}
+                >
                   {attempt.exerciseBpm}
                 </Text>
               </View>
             </View>
 
-            <Text style={modalStyles.chartLabel}>Comparison</Text>
+            <Text
+              style={[
+                modalStyles.chartLabel,
+                { color: colours.text, fontSize: 15 * colours.textScale },
+              ]}
+            >
+              Comparison
+            </Text>
             <View style={modalStyles.chartContainer}>
               <ComparisonChart
                 restSamples={attempt.restSamples}
@@ -285,7 +366,12 @@ function AttemptModal({
               />
             </View>
 
-            <Text style={[modalStyles.chartLabel, { color: "#2563eb" }]}>
+            <Text
+              style={[
+                modalStyles.chartLabel,
+                { color: colours.primary, fontSize: 15 * colours.textScale },
+              ]}
+            >
               Rest Chart
             </Text>
             <View style={modalStyles.chartContainer}>
@@ -297,7 +383,12 @@ function AttemptModal({
               />
             </View>
 
-            <Text style={[modalStyles.chartLabel, { color: "#dc2626" }]}>
+            <Text
+              style={[
+                modalStyles.chartLabel,
+                { color: colours.danger, fontSize: 15 * colours.textScale },
+              ]}
+            >
               Post-Exercise Chart
             </Text>
             <View style={modalStyles.chartContainer}>
@@ -313,11 +404,18 @@ function AttemptModal({
           <TouchableOpacity
             style={[
               modalStyles.doneBtn,
-              { backgroundColor: "#1e293b", marginTop: 20 },
+              { backgroundColor: colours.primary, marginTop: 20 },
             ]}
             onPress={onClose}
           >
-            <Text style={modalStyles.doneBtnText}>Close Analysis</Text>
+            <Text
+              style={[
+                modalStyles.doneBtnText,
+                { color: "#ffffff", fontSize: 18 * colours.textScale },
+              ]}
+            >
+              Close Analysis
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -331,6 +429,8 @@ export default function BreathingPaceScreen({
   onLogResults,
   hasDraft,
 }: BreathingPaceScreenProps) {
+  const { colours, highContrast } = useAccessibility();
+
   const [recordState, setRecordState] = useState<RecordState>("idle");
   const [countdown, setCountdown] = useState(3);
   const [elapsed, setElapsed] = useState(0);
@@ -366,9 +466,20 @@ export default function BreathingPaceScreen({
 
   const isRecordingActive =
     recordState === "recording_rest" || recordState === "recording_exercise";
-  const currentColor = recordState.includes("rest") ? "#2563eb" : "#dc2626";
+  const currentColor = recordState.includes("rest")
+    ? colours.primary
+    : colours.danger;
   const currentLabel = recordState.includes("rest") ? "Rest" : "Exercise";
   const latestAttempt = attempts[attempts.length - 1] ?? null;
+
+  const cardStyle = [
+    styles.sensorCard,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
 
   useEffect(() => {
     Accelerometer.isAvailableAsync().then((ok) => {
@@ -610,38 +721,84 @@ export default function BreathingPaceScreen({
   return (
     <>
       <ScrollView
-        style={styles.scrollContainer}
+        style={[styles.scrollContainer, { backgroundColor: colours.background }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.phoneFrame}>
-          <Text style={styles.headerTitle}>Breathing Pace Trainer</Text>
+        <View
+          style={[styles.phoneFrame, { backgroundColor: colours.background }]}
+        >
+          <Text
+            style={[
+              styles.headerTitle,
+              { color: colours.text, fontSize: 22 * colours.textScale },
+            ]}
+          >
+            Breathing Pace Trainer
+          </Text>
 
-          <View style={styles.sensorCard}>
-            <Text style={styles.cardHeader}>Live Sensor Data</Text>
+          <View style={cardStyle}>
+            <Text
+              style={[
+                styles.cardHeader,
+                { color: colours.subText, fontSize: 18 * colours.textScale },
+              ]}
+            >
+              Live Sensor Data
+            </Text>
             <View style={styles.metricsRow}>
               <View style={styles.metricColumn}>
-                <Text style={[styles.metricValue, { color: currentColor }]}>
+                <Text
+                  style={[
+                    styles.metricValue,
+                    { color: currentColor, fontSize: 26 * colours.textScale },
+                  ]}
+                >
                   {recordState === "idle" || recordState === "done"
                     ? "-"
                     : currentLabel}
                 </Text>
-                <Text style={styles.metricLabel}>Phase</Text>
+                <Text
+                  style={[
+                    styles.metricLabel,
+                    { color: colours.text, fontSize: 14 * colours.textScale },
+                  ]}
+                >
+                  Phase
+                </Text>
               </View>
               <View style={styles.metricColumn}>
-                <Text style={[styles.metricValue, { color: currentColor }]}>
+                <Text
+                  style={[
+                    styles.metricValue,
+                    { color: currentColor, fontSize: 26 * colours.textScale },
+                  ]}
+                >
                   {getCurrentBpmDisplay()}
                 </Text>
-                <Text style={styles.metricLabel}>Breaths/min</Text>
+                <Text
+                  style={[
+                    styles.metricLabel,
+                    { color: colours.text, fontSize: 14 * colours.textScale },
+                  ]}
+                >
+                  Breaths/min
+                </Text>
               </View>
               <View style={styles.metricColumn}>
                 <Text
                   style={[
                     styles.statusText,
-                    isRecordingActive && { color: "red" },
-                    recordState === "done" && { color: "#16a34a" },
-                    recordState.includes("countdown") && { color: "#ff0000" },
-                    recordState === "transition" && { color: "#16a34a" },
+                    {
+                      color: colours.primary,
+                      fontSize: 14 * colours.textScale,
+                    },
+                    isRecordingActive && { color: colours.danger },
+                    recordState === "done" && { color: colours.success },
+                    recordState.includes("countdown") && {
+                      color: colours.danger,
+                    },
+                    recordState === "transition" && { color: colours.success },
                   ]}
                 >
                   {isRecordingActive
@@ -657,11 +814,21 @@ export default function BreathingPaceScreen({
           </View>
 
           {isRecordingActive && (
-            <View style={[styles.sensorCard, { paddingBottom: 20 }]}>
-              <Text style={styles.cardHeader}>
+            <View style={[cardStyle, { paddingBottom: 20 }]}>
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { color: colours.subText, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 Live Sensor Data • {currentLabel}
               </Text>
-              <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressTrack,
+                  { backgroundColor: colours.border },
+                ]}
+              >
                 <View
                   style={[
                     styles.progressFill,
@@ -686,24 +853,91 @@ export default function BreathingPaceScreen({
           )}
 
           {recordState === "done" && latestAttempt && (
-            <View style={[styles.sensorCard, { paddingBottom: 20 }]}>
-              <Text style={styles.cardHeader}>Comparison - Results</Text>
-              <View style={styles.resultsSummary}>
+            <View style={[cardStyle, { paddingBottom: 20 }]}>
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { color: colours.subText, fontSize: 18 * colours.textScale },
+                ]}
+              >
+                Comparison - Results
+              </Text>
+              <View
+                style={[
+                  styles.resultsSummary,
+                  {
+                    backgroundColor: colours.background,
+                    borderColor: colours.border,
+                    borderWidth: highContrast ? 3 : 1,
+                  },
+                ]}
+              >
                 <View style={styles.resultCard}>
-                  <Text style={styles.resultLabel}>Rest BPM</Text>
-                  <Text style={[styles.resultValue, { color: "#2563eb" }]}>
+                  <Text
+                    style={[
+                      styles.resultLabel,
+                      {
+                        color: colours.subText,
+                        fontSize: 12 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    Rest BPM
+                  </Text>
+                  <Text
+                    style={[
+                      styles.resultValue,
+                      {
+                        color: colours.primary,
+                        fontSize: 24 * colours.textScale,
+                      },
+                    ]}
+                  >
                     {latestAttempt.restBpm}
                   </Text>
                 </View>
                 <View style={styles.resultCard}>
-                  <Text style={styles.resultLabel}>Exercise BPM</Text>
-                  <Text style={[styles.resultValue, { color: "#dc2626" }]}>
+                  <Text
+                    style={[
+                      styles.resultLabel,
+                      {
+                        color: colours.subText,
+                        fontSize: 12 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    Exercise BPM
+                  </Text>
+                  <Text
+                    style={[
+                      styles.resultValue,
+                      {
+                        color: colours.danger,
+                        fontSize: 24 * colours.textScale,
+                      },
+                    ]}
+                  >
                     {latestAttempt.exerciseBpm}
                   </Text>
                 </View>
                 <View style={styles.resultCard}>
-                  <Text style={styles.resultLabel}>Difference</Text>
-                  <Text style={styles.resultValue}>
+                  <Text
+                    style={[
+                      styles.resultLabel,
+                      {
+                        color: colours.subText,
+                        fontSize: 12 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    Difference
+                  </Text>
+                  <Text
+                    style={[
+                      styles.resultValue,
+                      { color: colours.text, fontSize: 24 * colours.textScale },
+                    ]}
+                  >
                     Δ
                     {Math.abs(
                       latestAttempt.exerciseBpm - latestAttempt.restBpm,
@@ -714,15 +948,35 @@ export default function BreathingPaceScreen({
               <View style={styles.legend}>
                 <View style={styles.legendItem}>
                   <View
-                    style={[styles.legendLine, { backgroundColor: "#2563eb" }]}
+                    style={[
+                      styles.legendLine,
+                      { backgroundColor: colours.primary },
+                    ]}
                   />
-                  <Text style={styles.legendText}>Rest</Text>
+                  <Text
+                    style={[
+                      styles.legendText,
+                      { color: colours.text, fontSize: 12 * colours.textScale },
+                    ]}
+                  >
+                    Rest
+                  </Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View
-                    style={[styles.legendLine, { backgroundColor: "#dc2626" }]}
+                    style={[
+                      styles.legendLine,
+                      { backgroundColor: colours.danger },
+                    ]}
                   />
-                  <Text style={styles.legendText}>Post-Exercise</Text>
+                  <Text
+                    style={[
+                      styles.legendText,
+                      { color: colours.text, fontSize: 12 * colours.textScale },
+                    ]}
+                  >
+                    Post-Exercise
+                  </Text>
                 </View>
               </View>
               <ComparisonChart
@@ -735,23 +989,47 @@ export default function BreathingPaceScreen({
           )}
 
           {recordState === "idle" && (
-            <View style={[styles.sensorCard, { height: 300 }]}>
-              <Text style={[styles.cardHeader, { fontSize: 20 }]}>
+            <View style={[cardStyle, { height: 300 }]}>
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { color: colours.subText, fontSize: 20 * colours.textScale },
+                ]}
+              >
                 Rest Breathing Pace
               </Text>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 1. Lie stationary on a flat surface.
               </Text>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 2. Place device with Side Quest app over your chest.
               </Text>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 3. Breathe normally for {RECORD_DURATION_SEC} seconds.
               </Text>
               <Text
                 style={[
                   styles.instructStep,
-                  { color: "#666", fontSize: 14, marginTop: 10 },
+                  {
+                    color: colours.subText,
+                    fontSize: 14 * colours.textScale,
+                    marginTop: 10,
+                  },
                 ]}
               >
                 Expected range: 12-20 BPM resting
@@ -760,45 +1038,109 @@ export default function BreathingPaceScreen({
           )}
 
           {recordState === "transition" && restBpmSaved !== null && (
-            <View style={styles.sensorCard}>
-              <Text style={styles.cardHeader}>
+            <View style={cardStyle}>
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { color: colours.subText, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 Post-Exercise Breathing Pace
               </Text>
-              <View style={styles.savedBpmCard}>
-                <Text style={styles.savedBpmLabel}>Resting BPM Recorded:</Text>
-                <Text style={[styles.savedBpmValue, { color: "#2563eb" }]}>
+              <View
+                style={[
+                  styles.savedBpmCard,
+                  {
+                    backgroundColor: colours.background,
+                    borderColor: colours.border,
+                    borderWidth: highContrast ? 3 : 1,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.savedBpmLabel,
+                    { color: colours.text, fontSize: 16 * colours.textScale },
+                  ]}
+                >
+                  Resting BPM Recorded:
+                </Text>
+                <Text
+                  style={[
+                    styles.savedBpmValue,
+                    {
+                      color: colours.primary,
+                      fontSize: 28 * colours.textScale,
+                    },
+                  ]}
+                >
                   {restBpmSaved}
                 </Text>
               </View>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 1. Lift the operational smartphone setup away from your body.
               </Text>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 2. Perform light exercise (jumping jacks, running in place,
                 etc.) for 30-60 seconds.
               </Text>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 3. Immediately resume your flat positioning.
               </Text>
-              <Text style={styles.instructStep}>
+              <Text
+                style={[
+                  styles.instructStep,
+                  { color: colours.text, fontSize: 18 * colours.textScale },
+                ]}
+              >
                 4. Replace the device on your chest and press Continue
               </Text>
             </View>
           )}
 
           {recordState.includes("countdown") && (
-            <View style={[styles.sensorCard, { height: 300 }]}>
-              <Text style={styles.cardHeader}>Starting in..</Text>
+            <View style={[cardStyle, { height: 300 }]}>
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { color: colours.subText, fontSize: 18 * colours.textScale },
+                ]}
+              >
+                Starting in..
+              </Text>
               <View style={{ alignItems: "center", marginVertical: 10 }}>
                 <Text
                   style={[
                     styles.metricValue,
-                    { fontSize: 54, color: "#1d5db1" },
+                    {
+                      fontSize: 54 * colours.textScale,
+                      color: colours.primary,
+                    },
                   ]}
                 >
                   {countdown}
                 </Text>
-                <Text style={styles.metricLabel}>
+                <Text
+                  style={[
+                    styles.metricLabel,
+                    { color: colours.text, fontSize: 14 * colours.textScale },
+                  ]}
+                >
                   Keep the phone centered and steady
                 </Text>
               </View>
@@ -806,25 +1148,68 @@ export default function BreathingPaceScreen({
           )}
 
           {attempts.length > 0 && (
-            <View style={styles.sensorCard}>
-              <Text style={styles.cardHeader}>Previous Attempts</Text>
+            <View style={cardStyle}>
+              <Text
+                style={[
+                  styles.cardHeader,
+                  { color: colours.subText, fontSize: 18 * colours.textScale },
+                ]}
+              >
+                Previous Attempts
+              </Text>
               {attempts.map((a, idx) => (
                 <TouchableOpacity
                   key={idx}
-                  style={styles.attemptRow}
+                  style={[
+                    styles.attemptRow,
+                    { borderTopColor: colours.border },
+                  ]}
                   onPress={() => setModalAttempt({ attempt: a, idx })}
                 >
-                  <Text style={styles.attemptIndex}>#{idx + 1}</Text>
+                  <Text
+                    style={[
+                      styles.attemptIndex,
+                      {
+                        color: colours.primary,
+                        fontSize: 16 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    #{idx + 1}
+                  </Text>
                   <View style={styles.attemptDetails}>
-                    <Text style={styles.attemptMovement}>
+                    <Text
+                      style={[
+                        styles.attemptMovement,
+                        {
+                          color: colours.text,
+                          fontSize: 14 * colours.textScale,
+                        },
+                      ]}
+                    >
                       Attempt {idx + 1}
                     </Text>
-                    <Text style={styles.attemptStat}>
+                    <Text
+                      style={[
+                        styles.attemptStat,
+                        {
+                          color: colours.subText,
+                          fontSize: 11 * colours.textScale,
+                        },
+                      ]}
+                    >
                       Rest: {a.restBpm} bpm • Post-Exercise: {a.exerciseBpm} bpm
                       • Δ{Math.abs(a.exerciseBpm - a.restBpm).toFixed(2)}
                     </Text>
                   </View>
-                  <Text style={styles.attemptChevron}>›</Text>
+                  <Text
+                    style={[
+                      styles.attemptChevron,
+                      { color: colours.text, fontSize: 24 * colours.textScale },
+                    ]}
+                  >
+                    ›
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -832,10 +1217,15 @@ export default function BreathingPaceScreen({
 
           {recordState === "idle" && (
             <TouchableOpacity
-              style={[styles.trackingButton, { backgroundColor: "#2563eb" }]}
+              style={[styles.trackingButton, { backgroundColor: colours.primary }]}
               onPress={() => setRecordState("countdown_rest")}
             >
-              <Text style={styles.trackingButtonText}>
+              <Text
+                style={[
+                  styles.trackingButtonText,
+                  { color: "#ffffff", fontSize: 18 * colours.textScale },
+                ]}
+              >
                 Start Rest Recording
               </Text>
             </TouchableOpacity>
@@ -843,10 +1233,15 @@ export default function BreathingPaceScreen({
 
           {recordState === "transition" && (
             <TouchableOpacity
-              style={[styles.trackingButton, { backgroundColor: "#2563eb" }]}
+              style={[styles.trackingButton, { backgroundColor: colours.primary }]}
               onPress={() => setRecordState("countdown_exercise")}
             >
-              <Text style={styles.trackingButtonText}>
+              <Text
+                style={[
+                  styles.trackingButtonText,
+                  { color: "#ffffff", fontSize: 18 * colours.textScale },
+                ]}
+              >
                 Continue to Exercise
               </Text>
             </TouchableOpacity>
@@ -854,41 +1249,108 @@ export default function BreathingPaceScreen({
 
           {isRecordingActive && (
             <TouchableOpacity
-              style={[styles.trackingButton, { backgroundColor: "#dc2626" }]}
+              style={[styles.trackingButton, { backgroundColor: colours.danger }]}
               onPress={stopRecording}
             >
-              <Text style={styles.trackingButtonText}>Stop Recording</Text>
+              <Text
+                style={[
+                  styles.trackingButtonText,
+                  { color: "#ffffff", fontSize: 18 * colours.textScale },
+                ]}
+              >
+                Stop Recording
+              </Text>
             </TouchableOpacity>
           )}
 
           {recordState === "done" && (
             <TouchableOpacity
-              style={[styles.trackingButton, { backgroundColor: "#16a34a" }]}
+              style={[styles.trackingButton, { backgroundColor: colours.success }]}
               onPress={resetForNewAttempt}
             >
-              <Text style={styles.trackingButtonText}>New Attempt</Text>
+              <Text
+                style={[
+                  styles.trackingButtonText,
+                  { color: "#ffffff", fontSize: 18 * colours.textScale },
+                ]}
+              >
+                New Attempt
+              </Text>
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
+          <TouchableOpacity
+            style={[
+              styles.logButton,
+              {
+                backgroundColor: colours.card,
+                borderColor: colours.border,
+                borderWidth: highContrast ? 3 : 2,
+              },
+            ]}
+            onPress={onLogResults}
+          >
             <View style={styles.logButtonContent}>
-              <Text style={styles.logButtonText}>Log Results</Text>
-              <Text style={styles.arrowIcon}>➔</Text>
+              <Text
+                style={[
+                  styles.logButtonText,
+                  { color: colours.text, fontSize: 20 * colours.textScale },
+                ]}
+              >
+                Log Results
+              </Text>
+              <Text
+                style={[
+                  styles.arrowIcon,
+                  { color: colours.text, fontSize: 20 * colours.textScale },
+                ]}
+              >
+                ➔
+              </Text>
             </View>
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-              <Text style={styles.bottomButtonText}>Quit</Text>
+            <TouchableOpacity
+              style={[
+                styles.quitButton,
+                {
+                  backgroundColor: colours.danger,
+                  borderColor: colours.border,
+                  borderWidth: highContrast ? 3 : 2,
+                },
+              ]}
+              onPress={onBack}
+            >
+              <Text
+                style={[
+                  styles.bottomButtonText,
+                  { color: "#ffffff", fontSize: 24 * colours.textScale },
+                ]}
+              >
+                Quit
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.submitButton,
+                {
+                  backgroundColor: colours.success,
+                  borderColor: colours.border,
+                  borderWidth: highContrast ? 3 : 2,
+                },
                 attempts.length === 0 && styles.disabledButton,
               ]}
               onPress={attempts.length > 0 ? onSubmit : undefined}
             >
-              <Text style={styles.bottomButtonText}>Submit</Text>
+              <Text
+                style={[
+                  styles.bottomButtonText,
+                  { color: colours.text, fontSize: 24 * colours.textScale },
+                ]}
+              >
+                Submit
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

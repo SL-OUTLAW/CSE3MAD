@@ -1,4 +1,5 @@
 import { useTeam } from "../../../context/TeamContext";
+import { useAccessibility } from "../../../context/AccessibilityContext";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -12,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const MENU_ITEMS = [
   { label: "Team", route: "/team-edit" },
-  { label: "Settings", route: null },
+  { label: "Accessibility", route: "/settings" },
   { label: "Help", route: null },
   { label: "Sign out", route: null },
 ];
@@ -20,32 +21,91 @@ const MENU_ITEMS = [
 export default function AccountScreen() {
   const router = useRouter();
   const { teamName, grade } = useTeam();
+  const { colours, highContrast } = useAccessibility();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      edges={["top", "left", "right"]}
+    >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Account</Text>
+        <Text
+          style={[
+            styles.title,
+            { color: colours.text, fontSize: 28 * colours.textScale },
+          ]}
+        >
+          Account
+        </Text>
 
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
+        <View 
+          style={[
+            styles.profileCard,
+          {
+            backgroundColor: colours.card,
+            borderColor: colours.border,
+            borderWidth: highContrast ? 3 : 1,
+          },
+          ]}
+        >
+          <View style={[styles.avatar, { backgroundColor: colours.primary }]}>
             <Text style={styles.avatarText}>T</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{teamName || "Team Name"}</Text>
-            <Text style={styles.profileSub}>Grade: {grade || "Not set"}</Text>
+            <Text
+              style={[
+                styles.profileName,
+                { color: colours.text, fontSize: 18 * colours.textScale },
+              ]}
+            >
+              {teamName || "Team Name"}
+            </Text>
+            <Text
+              style={[
+                styles.profileSub,
+                { color: colours.subText, fontSize: 14 * colours.textScale },
+              ]}            >
+              Grade {grade || "X"}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.menuContainer}>
+        <View
+          style={[
+            styles.menuContainer,
+            {
+              backgroundColor: colours.card,
+              borderColor: colours.border,
+              borderWidth: highContrast ? 3 : 1,
+            },
+          ]}
+        >
           {MENU_ITEMS.map((item) => (
             <TouchableOpacity
               key={item.label}
-              style={styles.menuRow}
+              style={[
+                styles.menuRow,
+                { borderBottomColor: colours.rowBorder },
+              ]}
               onPress={() => item.route && router.push(item.route as any)}
               activeOpacity={0.7}
             >
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuChevron}>›</Text>
+              <Text
+                style={[
+                  styles.menuLabel,
+                  { color: colours.text, fontSize: 16 * colours.textScale },
+                ]}
+              >
+                {item.label}
+              </Text>
+              <Text 
+              style={[
+                styles.menuChevron,
+                { color: colours.subText, fontSize: 22 * colours.textScale },
+              ]}
+              >
+                ›
+              </Text>
             </TouchableOpacity>
           ))}
         </View>

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import Svg, { Circle, G, Line } from "react-native-svg";
 import { calculateReactionResult } from "../services/physicsCalculationService";
+import { useAccessibility } from "../../context/AccessibilityContext";
 import {
   loadDraft,
   clearDraft,
@@ -189,6 +190,7 @@ export default function ReactionBoardScreen({
   onLogResults,
   hasDraft,
 }: ReactionBoardScreenProps) {
+  const { colours, highContrast } = useAccessibility();
   const [phase, setPhase] = useState<Phase>("phase1");
 
   const [tapState, setTapState] = useState<TapState>("idle");
@@ -212,6 +214,14 @@ export default function ReactionBoardScreen({
   const animFrameRef = useRef<number>(0);
   const traceStartRef = useRef<number>(0);
   const traceActiveRef = useRef(false);
+  const cardStyle = [
+    styles.sensorCard,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
 
   useEffect(() => {
     traceActiveRef.current = traceActive;
@@ -326,17 +336,24 @@ export default function ReactionBoardScreen({
 
   return (
     <ScrollView
-      style={styles.outerContainer}
+      style={[styles.outerContainer, { backgroundColor: colours.background }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.phoneFrame}>
-        <Text style={styles.headerTitle}>Reaction Board Challenge</Text>
+      <View style={[styles.phoneFrame, { backgroundColor: colours.background }]}>
+        <Text style={[styles.headerTitle, { color: colours.text, fontSize: 22 * colours.textScale }]}>Reaction Board Challenge</Text>
         <View style={styles.phaseRow}>
           {(["phase1", "phase2", "phase3"] as Phase[]).map((p) => (
             <TouchableOpacity
               key={p}
-              style={[styles.phaseTab, phase === p && styles.phaseTabActive]}
+              style={[
+                styles.phaseTab,
+                {
+                  backgroundColor: phase === p ? colours.inactiveButton : colours.card,
+                  borderColor: phase === p ? colours.primary : colours.border,
+                  borderWidth: highContrast ? 3 : 1.5,
+                },
+              ]}
               onPress={() => {
                 setPhase(p);
                 setTapState("idle");
@@ -353,7 +370,10 @@ export default function ReactionBoardScreen({
               <Text
                 style={[
                   styles.phaseTabText,
-                  phase === p && styles.phaseTabTextActive,
+                  {
+                    color: phase === p ? colours.primary : colours.text,
+                    fontSize: 13 * colours.textScale,
+                  },
                 ]}
               >
                 {p === "phase1"
@@ -367,31 +387,32 @@ export default function ReactionBoardScreen({
         </View>
         {(phase === "phase1" || phase === "phase2") && (
           <>
-            <View style={styles.sensorCard}>
-              <Text style={styles.cardHeader}>
+            <View style={cardStyle}>
+              <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>
                 {phase === "phase1"
                   ? "Tap Reaction (Dominant Hand)"
                   : "Swap Hands (Non-Dominant)"}
               </Text>
               <View style={styles.metricsRow}>
                 <View style={styles.metricColumn}>
-                  <Text style={styles.metricValue}>
+                  <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                     {reactionTimeMs > 0 ? `${reactionTimeMs}ms` : "-"}
                   </Text>
-                  <Text style={styles.metricLabel}>Reaction</Text>
+                  <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Reaction</Text>
                 </View>
                 <View style={styles.metricColumn}>
-                  <Text style={styles.metricValue}>
+                  <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                     {currentPhaseAttempts.length}
                   </Text>
-                  <Text style={styles.metricLabel}>Attempts</Text>
+                  <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Attempts</Text>
                 </View>
                 <View style={styles.metricColumn}>
                   <Text
                     style={[
                       styles.statusText,
-                      reactionStatus === "TAP NOW!" && { color: "#16a34a" },
-                      reactionStatus === "TOO SOON!" && { color: "#dc2626" },
+                      { color: colours.primary, fontSize: 14 * colours.textScale },
+                      reactionStatus === "TAP NOW!" && { color: colours.success },
+                      reactionStatus === "TOO SOON!" && { color: colours.danger },
                     ]}
                   >
                     {reactionStatus}
@@ -425,27 +446,27 @@ export default function ReactionBoardScreen({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.trackingButton}
+              style={[styles.trackingButton, { backgroundColor: colours.primary }]}
               onPress={startReaction}
             >
-              <Text style={styles.trackingButtonText}>Start</Text>
+              <Text style={[styles.trackingButtonText, { color: "#ffffff", fontSize: 20 * colours.textScale }]}>Start</Text>
             </TouchableOpacity>
 
             {currentPhaseAttempts.length > 0 && (
-              <View style={styles.sensorCard}>
-                <Text style={styles.cardHeader}>
+              <View style={cardStyle}>
+                <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>
                   Attempts •{" "}
-                  <Text style={{ color: "#1d5db1" }}>
+                  <Text style={{ color: colours.primary }}>
                     Avg: {avgReaction(currentPhaseAttempts)}ms
                   </Text>
                 </Text>
                 {currentPhaseAttempts.map((a, i) => (
                   <View key={i} style={styles.attemptRow}>
-                    <Text style={styles.attemptIndex}>#{i + 1}</Text>
-                    <Text style={styles.attemptDetail}>
+                    <Text style={[styles.attemptIndex, { color: colours.primary, fontSize: 14 * colours.textScale }]}>#{i + 1}</Text>
+                    <Text style={[styles.attemptDetail, { color: colours.text, fontSize: 14 * colours.textScale }]}>
                       {a.phase === "phase1" ? "Dominant" : "Non-dominant"} hand
                     </Text>
-                    <Text style={styles.attemptTime}>{a.reactionTimeMs}ms</Text>
+                    <Text style={[styles.attemptTime, { color: colours.success, fontSize: 14 * colours.textScale }]}>{a.reactionTimeMs}ms</Text>
                   </View>
                 ))}
               </View>
@@ -454,27 +475,28 @@ export default function ReactionBoardScreen({
         )}
         {phase === "phase3" && (
           <>
-            <View style={styles.sensorCard}>
-              <Text style={styles.cardHeader}>Tracing Challenge</Text>
+            <View style={cardStyle}>
+              <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>Tracing Challenge</Text>
               <View style={styles.metricsRow}>
                 <View style={styles.metricColumn}>
-                  <Text style={styles.metricValue}>
+                  <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                     {lastAccuracy > 0 ? `${lastAccuracy}%` : "-"}
                   </Text>
-                  <Text style={styles.metricLabel}>Accuracy</Text>
+                  <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Accuracy</Text>
                 </View>
                 <View style={styles.metricColumn}>
-                  <Text style={styles.metricValue}>
+                  <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                     {tracingAttempts.length}
                   </Text>
-                  <Text style={styles.metricLabel}>Attempts</Text>
+                  <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Attempts</Text>
                 </View>
                 <View style={styles.metricColumn}>
                   <Text
                     style={[
                       styles.statusText,
-                      traceStatus === "TRACING" && { color: "#16a34a" },
-                      traceStatus === "POOR" && { color: "#dc2626" },
+                      { color: colours.primary, fontSize: 14 * colours.textScale },
+                      traceStatus === "TRACING" && { color: colours.success },
+                      traceStatus === "POOR" && { color: colours.danger },
                     ]}
                   >
                     {traceStatus}
@@ -492,24 +514,24 @@ export default function ReactionBoardScreen({
             />
 
             <TouchableOpacity
-              style={[styles.trackingButton, { marginBottom: 50 }]}
+              style={[styles.trackingButton, { backgroundColor: colours.primary, marginBottom: 50 }]}
               onPress={handleStartTrace}
             >
-              <Text style={styles.trackingButtonText}>
+              <Text style={[styles.trackingButtonText, { color: "#ffffff", fontSize: 20 * colours.textScale }]}>
                 {traceActive ? "Tracing" : "Start"}
               </Text>
             </TouchableOpacity>
 
             {tracingAttempts.length > 0 && (
-              <View style={styles.sensorCard}>
-                <Text style={styles.cardHeader}>Tracing Attempts</Text>
+              <View style={cardStyle}>
+                <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>Tracing Attempts</Text>
                 {tracingAttempts.map((a, i) => (
                   <View key={i} style={styles.attemptRow}>
-                    <Text style={styles.attemptIndex}>#{i + 1}</Text>
-                    <Text style={styles.attemptDetail}>
+                    <Text style={[styles.attemptIndex, { color: colours.primary, fontSize: 14 * colours.textScale }]}>#{i + 1}</Text>
+                    <Text style={[styles.attemptDetail, { color: colours.text, fontSize: 14 * colours.textScale }]}>
                       {a.durationMs}ms duration
                     </Text>
-                    <Text style={styles.attemptTime}>{a.accuracyPercent}%</Text>
+                    <Text style={[styles.attemptTime, { color: colours.success, fontSize: 14 * colours.textScale }]}>{a.accuracyPercent}%</Text>
                   </View>
                 ))}
               </View>
@@ -517,45 +539,45 @@ export default function ReactionBoardScreen({
           </>
         )}
         {(phase === "phase1" || phase === "phase2") && (
-          <View style={[styles.sensorCard, { marginBottom: 50 }]}>
-            <Text style={styles.cardHeader}>Hand Comparison</Text>
+          <View style={[cardStyle, { marginBottom: 50 }]}>
+            <Text style={[styles.cardHeader, { color: colours.subText, fontSize: 18 * colours.textScale }]}>Hand Comparison</Text>
             <View style={styles.metricsRow}>
               <View style={styles.metricColumn}>
-                <Text style={styles.metricValue}>
+                <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                   {avgReaction(p1Attempts) || 0}ms
                 </Text>
-                <Text style={styles.metricLabel}>Dominant</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Dominant</Text>
               </View>
               <View style={styles.metricColumn}>
-                <Text style={styles.metricValue}>
+                <Text style={[styles.metricValue, { color: colours.primary, fontSize: 26 * colours.textScale }]}>
                   {avgReaction(p2Attempts) || 0}ms
                 </Text>
-                <Text style={styles.metricLabel}>Non-Dominant</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Non-Dominant</Text>
               </View>
               <View style={styles.metricColumn}>
-                <Text style={[styles.metricValue, { color: "#ee8003" }]}>
+                <Text style={[styles.metricValue, { color: colours.warning, fontSize: 26 * colours.textScale }]}>
                   {Math.abs(
                     avgReaction(p1Attempts)! - avgReaction(p2Attempts)!,
                   ) || 0}
                   ms
                 </Text>
-                <Text style={styles.metricLabel}>Difference</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Difference</Text>
               </View>
             </View>
           </View>
         )}
-        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
+        <TouchableOpacity style={[styles.logButton, { backgroundColor: colours.card, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onLogResults}>
           <View style={styles.logButtonContent}>
-            <Text style={styles.logButtonText}>Log Results</Text>
-            <Text style={styles.arrowIcon}>➔</Text>
+            <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
+            <Text style={[styles.arrowIcon, { color: colours.text, fontSize: 20 * colours.textScale }]}>➔</Text>
           </View>
         </TouchableOpacity>
         <View style={styles.bottomRow}>
-          <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-            <Text style={styles.bottomButtonText}>Quit</Text>
+          <TouchableOpacity style={[styles.quitButton, { backgroundColor: colours.danger, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onBack}>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-            <Text style={styles.bottomButtonText}>Submit</Text>
+          <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
+            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
       </View>

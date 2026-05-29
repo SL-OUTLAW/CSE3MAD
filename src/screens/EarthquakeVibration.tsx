@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { calculateSeismicVibration } from "../services/physicsCalculationService";
 import { LineChart } from "react-native-chart-kit";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 type EarthquakeDetectionScreenProps = {
   onBack: () => void;
@@ -28,6 +29,8 @@ export default function EarthquakeDetectionScreen({
   onLogResults,
   hasDraft,
 }: EarthquakeDetectionScreenProps) {
+  const { colours, highContrast } = useAccessibility();
+
   const [isTracking, setIsTracking] = useState(true);
   const [pga, setPga] = useState(0.0);
   const [mmiLevel, setMmiLevel] = useState("I");
@@ -35,6 +38,15 @@ export default function EarthquakeDetectionScreen({
 
   const [pgaHistory, setPgaHistory] = useState<number[]>([0, 0, 0, 0, 0]);
   const maxPgaRecord = Math.max(...pgaHistory);
+
+  const cardStyle = [
+    styles.sensorCard,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
 
   useEffect(() => {
     let subscription: any;
@@ -102,30 +114,76 @@ export default function EarthquakeDetectionScreen({
   };
 
   return (
-    <View style={styles.outerContainer}>
-      <View style={styles.phoneFrame}>
-        <Text style={styles.headerTitle}>Earthquake-Resistant Structure</Text>
+    <View style={[styles.outerContainer, { backgroundColor: colours.background }]}>
+      <View style={[styles.phoneFrame, { backgroundColor: colours.background }]}>
+        <Text
+          style={[
+            styles.headerTitle,
+            { color: colours.text, fontSize: 22 * colours.textScale },
+          ]}
+        >
+          Earthquake-Resistant Structure
+        </Text>
 
-        <View style={styles.sensorCard}>
-          <Text style={styles.cardHeader}>Live sensor data</Text>
+        <View style={cardStyle}>
+          <Text
+            style={[
+              styles.cardHeader,
+              { color: colours.subText, fontSize: 18 * colours.textScale },
+            ]}
+          >
+            Live sensor data
+          </Text>
 
           <View style={styles.metricsRow}>
             <View style={styles.metricColumn}>
-              <Text style={styles.metricValue}>{pga.toFixed(2)}g</Text>
-              <Text style={styles.metricLabel}>PGA</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  { color: colours.primary, fontSize: 26 * colours.textScale },
+                ]}
+              >
+                {pga.toFixed(2)}g
+              </Text>
+              <Text
+                style={[
+                  styles.metricLabel,
+                  { color: colours.text, fontSize: 14 * colours.textScale },
+                ]}
+              >
+                PGA
+              </Text>
             </View>
 
             <View style={styles.metricColumn}>
-              <Text style={styles.metricValue}>{mmiLevel}</Text>
-              <Text style={styles.metricLabel}>MMI</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  { color: colours.primary, fontSize: 26 * colours.textScale },
+                ]}
+              >
+                {mmiLevel}
+              </Text>
+              <Text
+                style={[
+                  styles.metricLabel,
+                  { color: colours.text, fontSize: 14 * colours.textScale },
+                ]}
+              >
+                MMI
+              </Text>
             </View>
 
             <View style={styles.metricColumn}>
               <Text
                 style={[
                   styles.statusText,
+                  {
+                    color: colours.primary,
+                    fontSize: 14 * colours.textScale,
+                  },
                   status !== "SENSOR ACTIVE" &&
-                    status !== "PAUSED" && { color: "#dc2626" },
+                    status !== "PAUSED" && { color: colours.danger },
                 ]}
               >
                 {status}
@@ -134,12 +192,23 @@ export default function EarthquakeDetectionScreen({
           </View>
         </View>
 
-        <View style={[styles.sensorCard, { paddingBottom: 0 }]}>
-          <Text style={styles.cardHeader}>PGA Chart (g)</Text>
+        <View style={[cardStyle, { paddingBottom: 0 }]}>
           <Text
             style={[
               styles.cardHeader,
-              { fontSize: 14, color: "red", fontWeight: 700 },
+              { color: colours.subText, fontSize: 18 * colours.textScale },
+            ]}
+          >
+            PGA Chart (g)
+          </Text>
+          <Text
+            style={[
+              styles.cardHeader,
+              {
+                fontSize: 14 * colours.textScale,
+                color: colours.danger,
+                fontWeight: "700",
+              },
             ]}
           >
             {maxPgaRecord > 0 ? `Peak: ${maxPgaRecord.toFixed(2)}g` : ""}
@@ -154,17 +223,22 @@ export default function EarthquakeDetectionScreen({
             segments={3}
             yAxisSuffix="g"
             chartConfig={{
-              backgroundColor: "#ffffff",
-              backgroundGradientFrom: "#ffffff",
-              backgroundGradientTo: "#ffffff",
+              backgroundColor: colours.card,
+              backgroundGradientFrom: colours.card,
+              backgroundGradientTo: colours.card,
               decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(29, 93, 177, ${opacity})`,
-              labelColor: () => "black",
+              color: (opacity = 1) => colours.primary,
+              labelColor: () => colours.text,
               style: { borderRadius: 16 },
               propsForDots: {
                 r: "1",
                 strokeWidth: "1",
-                stroke: "#1d5db1",
+                stroke: colours.primary,
+              },
+              propsForBackgroundLines: {
+                strokeDasharray: "",
+                stroke: colours.border,
+                strokeWidth: highContrast ? 2 : 1,
               },
             }}
             bezier
@@ -176,28 +250,91 @@ export default function EarthquakeDetectionScreen({
         </View>
 
         <TouchableOpacity
-          style={styles.trackingButton}
+          style={[styles.trackingButton, { backgroundColor: colours.primary }]}
           onPress={toggleTracking}
         >
-          <Text style={styles.trackingButtonText}>
+          <Text
+            style={[
+              styles.trackingButtonText,
+              { color: "#ffffff", fontSize: 20 * colours.textScale },
+            ]}
+          >
             {isTracking ? "Pause tracking" : "Resume tracking"}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logButton} onPress={onLogResults}>
+        <TouchableOpacity
+          style={[
+            styles.logButton,
+            {
+              backgroundColor: colours.card,
+              borderColor: colours.border,
+              borderWidth: highContrast ? 3 : 2,
+            },
+          ]}
+          onPress={onLogResults}
+        >
           <View style={styles.logButtonContent}>
-            <Text style={styles.logButtonText}>Log Results</Text>
-            <Text style={styles.arrowIcon}>➔</Text>
+            <Text
+              style={[
+                styles.logButtonText,
+                { color: colours.text, fontSize: 20 * colours.textScale },
+              ]}
+            >
+              Log Results
+            </Text>
+            <Text
+              style={[
+                styles.arrowIcon,
+                { color: colours.text, fontSize: 20 * colours.textScale },
+              ]}
+            >
+              ➔
+            </Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.bottomRow}>
-          <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-            <Text style={styles.bottomButtonText}>Quit</Text>
+          <TouchableOpacity
+            style={[
+              styles.quitButton,
+              {
+                backgroundColor: colours.danger,
+                borderColor: colours.border,
+                borderWidth: highContrast ? 3 : 2,
+              },
+            ]}
+            onPress={onBack}
+          >
+            <Text
+              style={[
+                styles.bottomButtonText,
+                { color: "#ffffff", fontSize: 24 * colours.textScale },
+              ]}
+            >
+              Quit
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-            <Text style={styles.bottomButtonText}>Submit</Text>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              {
+                backgroundColor: colours.success,
+                borderColor: colours.border,
+                borderWidth: highContrast ? 3 : 2,
+              },
+            ]}
+            onPress={onSubmit}
+          >
+            <Text
+              style={[
+                styles.bottomButtonText,
+                { color: colours.text, fontSize: 24 * colours.textScale },
+              ]}
+            >
+              Submit
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -244,7 +381,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     fontSize: 18,
     color: "#666666",
-    fontWeight: 600,
+    fontWeight: "600",
     marginBottom: 24,
   },
   metricsRow: {
