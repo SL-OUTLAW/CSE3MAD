@@ -19,7 +19,7 @@ export function getAccessibilityTheme({
   highContrast,
   textSize,
 }: AccessibilityOptions) {
-  const primary = colourBlindMode ? "#f97316" : "#2563eb";
+  const primary = colourBlindMode ? "#f97316" : "#306eff";
 
   return {
     background: highContrast
