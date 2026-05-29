@@ -1,6 +1,6 @@
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,11 +14,45 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTeam } from "../../../context/TeamContext";
 import { useAccessibility } from "../../../context/AccessibilityContext";
+import { listenToTeamRank } from "../../services/leaderboardService";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { teamName, grade, teamId, rank, score } = useTeam();
+  const { teamName, grade, teamId, rank, score, setRank, setScore } = useTeam();
   const { colours, highContrast } = useAccessibility();
+
+  const [isRankLoading, setIsRankLoading] = useState(true);
+
+  
+  useEffect(() => {
+    if (!teamId) {
+      setIsRankLoading(false);
+      return;
+    }
+
+    setIsRankLoading(true);
+    const unsubscribe = listenToTeamRank(
+      teamId,
+      (newRank, newScore) => {
+        setRank(newRank);
+        setScore(newScore);
+        setIsRankLoading(false);
+      },
+      (error) => {
+        console.warn("Rank listener error:", error);
+        setIsRankLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, [teamId, setRank, setScore]);
+
+  
+  useFocusEffect(
+    useCallback(() => {
+      
+    }, [])
+  );
 
   const themedCardStyle = [
     styles.card,
@@ -81,7 +115,12 @@ export default function HomeScreen() {
                   },
                 ]}
               >
-                {teamName || "Team"} {rank ? `#${rank}` : "#unranked"}
+                {teamName || "Team"}{" "}
+                {rank && !isRankLoading
+                  ? `#${rank}`
+                  : isRankLoading
+                  ? "..."
+                  : "#unranked"}
               </Text>
 
               <Text
@@ -90,7 +129,7 @@ export default function HomeScreen() {
                   { color: colours.text, fontSize: 20 * colours.textScale },
                 ]}
               >
-                Score : {score} points
+                Score : {isRankLoading ? "..." : score} points
               </Text>
 
               <Text
