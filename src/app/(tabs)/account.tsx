@@ -1,6 +1,8 @@
 import { useTeam } from "../../../context/TeamContext";
 import { useAccessibility } from "../../../context/AccessibilityContext";
 import { useRouter } from "expo-router";
+import { logoutUser } from "../../services/firebase";
+import { clearUserSession } from "../../services/userSessionService";
 import React from "react";
 import {
   ScrollView,
@@ -15,13 +17,30 @@ const MENU_ITEMS = [
   { label: "Team", route: "/team-edit" },
   { label: "Accessibility", route: "/settings" },
   { label: "Help", route: null },
-  { label: "Sign out", route: null },
+  { label: "Log out", route: null },
 ];
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { teamName, grade } = useTeam();
+  const { teamName, grade, setTeamName, setGrade, setTeamId, setTeamMembers } = useTeam();
   const { colours, highContrast } = useAccessibility();
+
+    const handleLogout = async () => {
+    try {
+      await logoutUser();
+      await clearUserSession();
+
+      setTeamId("");
+      setTeamName("");
+      setGrade("");
+      setTeamMembers([]);
+
+      router.replace("/login");
+    } catch {
+      await clearUserSession();
+      router.replace("/login");
+    }
+  };
 
   return (
     <SafeAreaView
@@ -87,7 +106,16 @@ export default function AccountScreen() {
                 styles.menuRow,
                 { borderBottomColor: colours.rowBorder },
               ]}
-              onPress={() => item.route && router.push(item.route as any)}
+              onPress={() => {
+                if (item.label === "Log out") {
+                void handleLogout();
+                return;
+              }
+
+              if (item.route) {
+                router.push(item.route as any);
+           }
+          }}
               activeOpacity={0.7}
             >
               <Text
