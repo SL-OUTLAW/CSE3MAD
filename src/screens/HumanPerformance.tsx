@@ -309,6 +309,11 @@ export default function HumanPerformanceLabScreen({
                 strokeWidth: "1",
                 stroke: colours.primary,
               },
+              propsForBackgroundLines: {
+                strokeDasharray: "",
+                stroke: colours.border,
+                strokeWidth: highContrast ? 2 : 1,
+              },
             }}
             bezier
             style={{ marginVertical: 8, borderRadius: 16 }}
@@ -320,14 +325,14 @@ export default function HumanPerformanceLabScreen({
             style={[styles.trackingButton, { backgroundColor: colours.success }]}
             onPress={startAttempt}
           >
-            <Text style={styles.trackingButtonText}>Start Attempt</Text>
+            <Text style={styles.trackingButtonText}>Start</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             style={[styles.trackingButton, { backgroundColor: colours.danger }]}
             onPress={stopEarly}
           >
-            <Text style={styles.trackingButtonText}>■ Stop</Text>
+            <Text style={styles.trackingButtonText}>Stop</Text>
           </TouchableOpacity>
         )}
 
