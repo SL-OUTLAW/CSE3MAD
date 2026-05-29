@@ -1,5 +1,5 @@
 import { Accelerometer } from "expo-sensors";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { calculateSeismicVibration } from "../services/physicsCalculationService";
 import { LineChart } from "react-native-chart-kit";
@@ -21,23 +22,44 @@ type EarthquakeDetectionScreenProps = {
   activityTitle?: string;
 };
 
+type EarthquakeAttempt = {
+  id: number;
+  peakPGA: number;
+  avgPGA: number;
+  mmiLevel: string;
+  timestamp: Date;
+};
+
 const SCREEN_WIDTH = Dimensions.get("window").width;
+const ATTEMPT_DURATION_SEC = 20;
 
 export default function EarthquakeDetectionScreen({
   onBack,
   onSubmit,
   onLogResults,
-  hasDraft,
 }: EarthquakeDetectionScreenProps) {
   const { colours, highContrast } = useAccessibility();
 
-  const [isTracking, setIsTracking] = useState(true);
+  
+  const [isAttemptActive, setIsAttemptActive] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(ATTEMPT_DURATION_SEC);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  
   const [pga, setPga] = useState(0.0);
   const [mmiLevel, setMmiLevel] = useState("I");
   const [status, setStatus] = useState("SENSOR ACTIVE");
-
   const [pgaHistory, setPgaHistory] = useState<number[]>([0, 0, 0, 0, 0]);
-  const maxPgaRecord = Math.max(...pgaHistory);
+
+  
+  const [earthquakeAttempts, setEarthquakeAttempts] = useState<EarthquakeAttempt[]>([]);
+  const peakPGARef = useRef(0);
+  const peakMMIRef = useRef("I");
+  const subscriptionRef = useRef<any>(null);
+
+  
+  const pgaSumRef = useRef(0);
+  const pgaCountRef = useRef(0);
 
   const cardStyle = [
     styles.sensorCard,
@@ -48,73 +70,140 @@ export default function EarthquakeDetectionScreen({
     },
   ];
 
-  useEffect(() => {
-    let subscription: any;
-
-    const startSensor = async () => {
-      const available = await Accelerometer.isAvailableAsync();
-      if (!available) {
-        Alert.alert(
-          "Error",
-          "Accelerometer sensor is unavailable on this device.",
-        );
-        return;
-      }
-
-      Accelerometer.setUpdateInterval(100);
-
-      subscription = Accelerometer.addListener(({ x, y, z }) => {
-        if (isTracking) {
-          calculateSeismicVibration({ x, y, z }).then((result) => {
-            const currentPga = result.accelMagnitude;
-            setPga(currentPga);
-            setStatus(result.seismicStatus);
-
-            setPgaHistory((prevHistory) => {
-              const updated = [...prevHistory, currentPga];
-              if (updated.length > 10) {
-                updated.shift();
-              }
-              return updated;
-            });
-
-            let currentMmi = "I";
-            if (currentPga > 0.8) {
-              currentMmi = "VIII";
-            } else if (currentPga > 0.34) {
-              currentMmi = "VI";
-            } else if (currentPga > 0.12) {
-              currentMmi = "IV";
-            } else if (currentPga > 0.02) {
-              currentMmi = "II";
-            }
-
-            setMmiLevel(currentMmi);
-          });
-        }
-      });
-    };
-
-    startSensor();
-
-    return () => {
-      if (subscription) {
-        subscription.remove();
-      }
-    };
-  }, [isTracking]);
-
-  const toggleTracking = () => {
-    if (isTracking) {
-      setStatus("PAUSED");
-    } else {
-      setStatus("SENSOR ACTIVE");
+  
+  const stopSensor = () => {
+    if (subscriptionRef.current) {
+      subscriptionRef.current.remove();
+      subscriptionRef.current = null;
     }
-    setIsTracking(!isTracking);
   };
 
+  
+  const startAttempt = async () => {
+    if (isAttemptActive) return;
+
+    const available = await Accelerometer.isAvailableAsync();
+    if (!available) {
+      Alert.alert("Error", "Accelerometer sensor is unavailable on this device.");
+      return;
+    }
+
+    
+    setPga(0);
+    setMmiLevel("I");
+    setStatus("RECORDING");
+    setPgaHistory([0, 0, 0, 0, 0]);
+    peakPGARef.current = 0;
+    peakMMIRef.current = "I";
+    pgaSumRef.current = 0;
+    pgaCountRef.current = 0;
+    setRemainingSeconds(ATTEMPT_DURATION_SEC);
+
+    
+    Accelerometer.setUpdateInterval(100);
+    subscriptionRef.current = Accelerometer.addListener(({ x, y, z }) => {
+      calculateSeismicVibration({ x, y, z }).then((result) => {
+        const currentPga = result.accelMagnitude;
+        setPga(currentPga);
+        setStatus(result.seismicStatus);
+
+        
+        pgaSumRef.current += currentPga;
+        pgaCountRef.current += 1;
+
+        
+        if (currentPga > peakPGARef.current) {
+          peakPGARef.current = currentPga;
+          let newMmi = "I";
+          if (currentPga > 0.8) newMmi = "VIII";
+          else if (currentPga > 0.34) newMmi = "VI";
+          else if (currentPga > 0.12) newMmi = "IV";
+          else if (currentPga > 0.02) newMmi = "II";
+          peakMMIRef.current = newMmi;
+          setMmiLevel(newMmi);
+        }
+
+        
+        setPgaHistory((prev) => {
+          const updated = [...prev, currentPga];
+          if (updated.length > 10) updated.shift();
+          return updated;
+        });
+      });
+    });
+
+    setIsAttemptActive(true);
+
+    
+    timerRef.current = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          finishAttempt();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const finishAttempt = () => {
+    
+    stopSensor();
+    setIsAttemptActive(false);
+    setStatus("SENSOR ACTIVE");
+
+    
+    const avgPGA = pgaCountRef.current > 0 ? pgaSumRef.current / pgaCountRef.current : 0;
+
+    
+    const newAttempt: EarthquakeAttempt = {
+      id: Date.now(),
+      peakPGA: peakPGARef.current,
+      avgPGA: avgPGA,
+      mmiLevel: peakMMIRef.current,
+      timestamp: new Date(),
+    };
+    setEarthquakeAttempts((prev) => [newAttempt, ...prev]);
+
+    
+    setPga(peakPGARef.current);
+    setMmiLevel(peakMMIRef.current);
+  };
+
+  const cancelAttempt = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    stopSensor();
+    setIsAttemptActive(false);
+    setStatus("SENSOR ACTIVE");
+    setPga(0);
+    setMmiLevel("I");
+    setPgaHistory([0, 0, 0, 0, 0]);
+    setRemainingSeconds(ATTEMPT_DURATION_SEC);
+    pgaSumRef.current = 0;
+    pgaCountRef.current = 0;
+    peakPGARef.current = 0;
+  };
+
+  
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      stopSensor();
+    };
+  }, []);
+
+  const maxPgaRecord = pgaHistory.length > 0 ? Math.max(...pgaHistory) : 0;
+
   return (
-    <View style={[styles.outerContainer, { backgroundColor: colours.background }]}>
+    <ScrollView
+      style={[styles.outerContainer, { backgroundColor: colours.background }]}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={[styles.phoneFrame, { backgroundColor: colours.background }]}>
         <Text
           style={[
@@ -132,7 +221,7 @@ export default function EarthquakeDetectionScreen({
               { color: colours.subText, fontSize: 18 * colours.textScale },
             ]}
           >
-            Live sensor data
+            {isAttemptActive ? "Live Sensor Data" : "Last result"}
           </Text>
 
           <View style={styles.metricsRow}>
@@ -179,14 +268,12 @@ export default function EarthquakeDetectionScreen({
                 style={[
                   styles.statusText,
                   {
-                    color: colours.primary,
+                    color: isAttemptActive ? colours.success : colours.primary,
                     fontSize: 14 * colours.textScale,
                   },
-                  status !== "SENSOR ACTIVE" &&
-                    status !== "PAUSED" && { color: colours.danger },
                 ]}
               >
-                {status}
+                {isAttemptActive ? `${remainingSeconds}s left` : status}
               </Text>
             </View>
           </View>
@@ -249,19 +336,76 @@ export default function EarthquakeDetectionScreen({
           />
         </View>
 
-        <TouchableOpacity
-          style={[styles.trackingButton, { backgroundColor: colours.primary }]}
-          onPress={toggleTracking}
-        >
-          <Text
-            style={[
-              styles.trackingButtonText,
-              { color: "#ffffff", fontSize: 20 * colours.textScale },
-            ]}
+        {!isAttemptActive ? (
+          <TouchableOpacity
+            style={[styles.trackingButton, { backgroundColor: colours.primary }]}
+            onPress={startAttempt}
           >
-            {isTracking ? "Pause tracking" : "Resume tracking"}
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.trackingButtonText,
+                { color: "#ffffff", fontSize: 20 * colours.textScale },
+              ]}
+            >
+              Start Attempt
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.trackingButton, { backgroundColor: colours.danger }]}
+            onPress={cancelAttempt}
+          >
+            <Text
+              style={[
+                styles.trackingButtonText,
+                { color: "#ffffff", fontSize: 20 * colours.textScale },
+              ]}
+            >
+              Cancel Attempt
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {earthquakeAttempts.length > 0 && (
+          <View style={cardStyle}>
+            <Text
+              style={[
+                styles.cardHeader,
+                { color: colours.subText, fontSize: 18 * colours.textScale },
+              ]}
+            >
+              Attempts
+            </Text>
+            {earthquakeAttempts.map((attempt, idx) => (
+              <View key={attempt.id} style={styles.attemptRow}>
+                <Text
+                  style={[
+                    styles.attemptIndex,
+                    { color: colours.primary, fontSize: 14 * colours.textScale },
+                  ]}
+                >
+                  #{idx + 1}
+                </Text>
+                <Text
+                  style={[
+                    styles.attemptDetail,
+                    { color: colours.text, fontSize: 14 * colours.textScale },
+                  ]}
+                >
+                  {attempt.timestamp.toLocaleTimeString()}
+                </Text>
+                <Text
+                  style={[
+                    styles.attemptTime,
+                    { color: colours.success, fontSize: 14 * colours.textScale },
+                  ]}
+                >
+                  {attempt.peakPGA.toFixed(2)}g ({attempt.avgPGA.toFixed(2)}g avg)
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <TouchableOpacity
           style={[
@@ -338,7 +482,7 @@ export default function EarthquakeDetectionScreen({
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -346,8 +490,9 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: "#ffffff",
+  },
+  scrollContent: {
     alignItems: "center",
-    justifyContent: "center",
     paddingVertical: 20,
   },
   phoneFrame: {
@@ -419,7 +564,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 50,
+    marginBottom: 20,
   },
   trackingButtonText: {
     color: "#ffffff",
@@ -434,6 +579,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 20,
+    marginTop: 40,
   },
   logButtonContent: {
     flexDirection: "row",
@@ -479,5 +625,32 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "400",
     color: "#000000",
+  },
+  attemptRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#f1f5f9",
+    gap: 10,
+  },
+  attemptIndex: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#1d5db1",
+    width: 28,
+  },
+  attemptDetail: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000000",
+  },
+  attemptTime: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#15a94b",
+    width: "40%",
+    textAlign: "right",
   },
 });
