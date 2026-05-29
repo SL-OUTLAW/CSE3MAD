@@ -33,6 +33,26 @@ export type BreathingDetectionState = {
   startTime: number;
 };
 
+export type Point = {
+  x: number;
+  y: number;
+  timestamp: number;
+};
+
+export type TraceCalculationInput = {
+  path: Point[];           
+  canvasSize: number;
+  traceStartTime: number;  
+  traceRadius: number;
+  tolerance: number;
+  angleTolerance: number;
+};
+
+export type TraceCalculationResult = {
+  accuracyPercent: number;
+  durationMs: number;
+};
+
 function runCalculation<T>(calculation: () => T): Promise<T> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -40,6 +60,30 @@ function runCalculation<T>(calculation: () => T): Promise<T> {
     }, 0);
   });
 }
+
+export type ChartPoint = { x: number; y: number };
+
+export type BreathingChartResult = {
+  polyline: string;
+  timeTicks: { x: number; label: string }[];
+  gridYPositions: number[];
+};
+
+export type BreathingComparisonResult = {
+  restPolyline: string;
+  exercisePolyline: string;
+  timeTicks: { x: number; label: string }[];
+  gridYPositions: number[];
+};
+
+export type ReactionCalculationResult = {
+  reactionTimeMs: number;
+  reactionStatus: string;
+  accuracyPercent: number;
+  durationMs: number;
+  traceStatus: string;
+};
+
 
 const ALPHA = 0.3;
 const BREATH_THRESHOLD = 0.004;
@@ -203,20 +247,6 @@ export function validateBreathCount(
   );
 }
 
-export type ChartPoint = { x: number; y: number };
-
-export type BreathingChartResult = {
-  polyline: string;
-  timeTicks: { x: number; label: string }[];
-  gridYPositions: number[];
-};
-
-export type BreathingComparisonResult = {
-  restPolyline: string;
-  exercisePolyline: string;
-  timeTicks: { x: number; label: string }[];
-  gridYPositions: number[];
-};
 
 export function calculateBreathingChart(
   samples: number[],
@@ -353,13 +383,6 @@ export function calculateSeismicVibration(
   });
 }
 
-export type ReactionCalculationResult = {
-  reactionTimeMs: number;
-  reactionStatus: string;
-  accuracyPercent: number;
-  durationMs: number;
-  traceStatus: string;
-};
 
 export function calculateReactionResult(
   input: Partial<{
@@ -396,5 +419,49 @@ export function calculateReactionResult(
       durationMs,
       traceStatus,
     };
+
+    
   });
+}
+
+export function calculateTraceAccuracy({
+  path,
+  canvasSize,
+  traceStartTime,
+  traceRadius,
+  tolerance,
+  angleTolerance,
+}: TraceCalculationInput): TraceCalculationResult {
+  const total = path.length;
+  if (total === 0) return { accuracyPercent: 0, durationMs: 0 };
+
+  const cx = canvasSize / 2;
+  const cy = canvasSize / 2;
+  const angularSpeedDegPerSec = 90; 
+
+  let accurate = 0;
+
+  for (const p of path) {
+    const dx = p.x - cx;
+    const dy = p.y - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const radialOk = Math.abs(dist - traceRadius) < tolerance;
+    if (!radialOk) continue;
+
+    const elapsedSec = (p.timestamp - traceStartTime) / 1000;
+    const expectedAngleDeg = (elapsedSec * angularSpeedDegPerSec) % 360;
+    let actualAngleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (actualAngleDeg < 0) actualAngleDeg += 360;
+
+    let angleDiff = Math.abs(expectedAngleDeg - actualAngleDeg);
+    angleDiff = Math.min(angleDiff, 360 - angleDiff);
+    const angularOk = angleDiff < angleTolerance;
+
+    if (radialOk && angularOk) accurate++;
+  }
+
+  const accuracyPercent = Math.round((accurate / total) * 100);
+  const durationMs = Math.round(performance.now() - traceStartTime);
+
+  return { accuracyPercent, durationMs };
 }
