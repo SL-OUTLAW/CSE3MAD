@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -8,8 +7,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { useAccessibility } from "../../context/AccessibilityContext";
 
 type SubmitParams = Record<string, string>;
 
@@ -36,6 +36,7 @@ function round(value: number, decimals = 2) {
 }
 
 export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Props) {
+  const { colours, highContrast } = useAccessibility();
   const [distance, setDistance] = useState("15");
   const [material, setMaterial] = useState(MATERIALS[0].thickness);
   const [fanDesign, setFanDesign] = useState("");
@@ -43,6 +44,24 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
   const [bendAngle, setBendAngle] = useState("");
   const [observation, setObservation] = useState("");
   const [videoUri, setVideoUri] = useState("");
+  const cardStyle = [
+    styles.card,
+    {
+      backgroundColor: colours.card,
+      borderColor: colours.border,
+      borderWidth: highContrast ? 3 : 1,
+    },
+  ];
+
+  const inputStyle = [
+    styles.input,
+    {
+      color: colours.text,
+      borderColor: colours.border,
+      backgroundColor: colours.background,
+      fontSize: 16 * colours.textScale,
+    },
+  ];
 
   const result = useMemo(() => {
     const angleDeg = num(bendAngle);
@@ -81,75 +100,88 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
   };
 
   return (
-    <View style={styles.outer}>
+    <View style={[styles.outer, { backgroundColor: colours.background }]}>
       <KeyboardAvoidingView
-        style={styles.frame}
+        style={[styles.frame, { backgroundColor: colours.background }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Hand Fan Challenge</Text>
+          <Text style={[styles.title, { color: colours.text, fontSize: 22 * colours.textScale }]}>Hand Fan Challenge</Text>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Test Measurements</Text>
+          <View style={cardStyle}>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Test Measurements</Text>
 
-            <Text style={styles.label}>Thickness (mm)</Text>
+            <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Thickness (mm)</Text>
             <View style={styles.wrapRow}>
               {MATERIALS.map((item) => (
                 <TouchableOpacity
                   key={item.thickness}
-                  style={[styles.chip, material === item.thickness && styles.chipSelected]}
+                  style={[
+                    styles.chip,
+                    {
+                      borderColor: material === item.thickness ? colours.primary : colours.border,
+                      backgroundColor: material === item.thickness ? colours.primary : colours.card,
+                      borderWidth: highContrast ? 3 : 1,
+                    },
+                  ]}
                   onPress={() => setMaterial(item.thickness)}
                 >
-                  <Text style={[styles.chipText, material === item.thickness && styles.chipTextSelected]}>
+                  <Text style={[
+                    styles.chipText,
+                    {
+                      color: material === item.thickness ? "#ffffff" : colours.text,
+                      fontSize: 18 * colours.textScale,
+                    }
+                  ]}>
                     {item.thickness}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.label}>Bend angle / movement (degrees)</Text>
+            <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Bend angle / movement (degrees)</Text>
             <TextInput
-              style={styles.input}
+              style={inputStyle}
               value={bendAngle}
               onChangeText={setBendAngle}
               keyboardType="decimal-pad"
               placeholder="e.g. 30"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colours.subText}
             />
           </View>
 
-          <View style={[styles.card, { marginBottom: 40 }]}>
-            <Text style={styles.cardTitle}>Calculated Results</Text>
+          <View style={[cardStyle, { marginBottom: 40 }]}>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Calculated Results</Text>
 
             <View style={styles.row}>
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{round(result.angleDeg)}°</Text>
-                <Text style={styles.metricLabel}>Bend angle</Text>
+                <Text style={[styles.metricValue, { color: colours.primary, fontSize: 24 * colours.textScale }]}>{round(result.angleDeg)}°</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Bend angle</Text>
               </View>
 
               <View style={styles.metric}>
-                <Text style={styles.metricValue}>{round(result.force, 4)} N</Text>
-                <Text style={styles.metricLabel}>Force est.</Text>
+                <Text style={[styles.metricValue, { color: colours.primary, fontSize: 24 * colours.textScale }]}>{round(result.force, 4)} N</Text>
+                <Text style={[styles.metricLabel, { color: colours.text, fontSize: 14 * colours.textScale }]}>Force est.</Text>
               </View>
             </View>
 
-            <Text style={styles.resultText}>Stiffness: {result.stiffness} N/rad</Text>
-            <Text style={styles.resultText}>Angle in radians: {round(result.angleRad)}</Text>
+            <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Stiffness: {result.stiffness} N/rad</Text>
+            <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Angle in radians: {round(result.angleRad)}</Text>
           </View>
 
-          <TouchableOpacity style={styles.logButton} onPress={handleLogResults}>
+          <TouchableOpacity style={[styles.logButton, { borderColor: colours.border, backgroundColor: colours.card, borderWidth: highContrast ? 3 : 2 }]} onPress={handleLogResults}>
             <View style={styles.logButtonContent}>
-              <Text style={styles.logButtonText}>Log Results</Text>
-              <Text style={styles.arrowIcon}>➔</Text>
+              <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
+              <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
             </View>
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
-            <TouchableOpacity style={styles.quitButton} onPress={onBack}>
-              <Text style={styles.bottomButtonText}>Quit</Text>
+            <TouchableOpacity style={[styles.quitButton, { borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onBack}>
+              <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Quit</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-              <Text style={styles.bottomButtonText}>Submit</Text>
+            <TouchableOpacity style={[styles.submitButton, { borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
+              <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
