@@ -1020,7 +1020,7 @@ export default function BreathingPaceScreen({
                   { color: colours.text, fontSize: 18 * colours.textScale },
                 ]}
               >
-                3. Breathe normally for {RECORD_DURATION_SEC} seconds.
+                3. Breathe normally for {RECORD_DURATION_SEC} seconds. {"\n"}
               </Text>
               <Text
                 style={[
@@ -1032,7 +1032,7 @@ export default function BreathingPaceScreen({
                   },
                 ]}
               >
-                Expected range: 12-20 BPM resting
+                Expected range: 12-20 Breaths/min resting
               </Text>
             </View>
           )}
@@ -1063,7 +1063,7 @@ export default function BreathingPaceScreen({
                     { color: colours.text, fontSize: 16 * colours.textScale },
                   ]}
                 >
-                  Resting BPM Recorded:
+                  Resting BPM:
                 </Text>
                 <Text
                   style={[
@@ -1077,13 +1077,15 @@ export default function BreathingPaceScreen({
                   {restBpmSaved}
                 </Text>
               </View>
+
               <Text
                 style={[
                   styles.instructStep,
                   { color: colours.text, fontSize: 18 * colours.textScale },
                 ]}
               >
-                1. Lift the operational smartphone setup away from your body.
+                1. Perform light exercise (jumping jacks, running in place,
+                etc.)
               </Text>
               <Text
                 style={[
@@ -1091,8 +1093,7 @@ export default function BreathingPaceScreen({
                   { color: colours.text, fontSize: 18 * colours.textScale },
                 ]}
               >
-                2. Perform light exercise (jumping jacks, running in place,
-                etc.) for 30-60 seconds.
+                2. Immediately resume the flat positioning.
               </Text>
               <Text
                 style={[
@@ -1100,15 +1101,7 @@ export default function BreathingPaceScreen({
                   { color: colours.text, fontSize: 18 * colours.textScale },
                 ]}
               >
-                3. Immediately resume your flat positioning.
-              </Text>
-              <Text
-                style={[
-                  styles.instructStep,
-                  { color: colours.text, fontSize: 18 * colours.textScale },
-                ]}
-              >
-                4. Replace the device on your chest and press Continue
+                3. Place the device on your chest and press Continue
               </Text>
             </View>
           )}
@@ -1505,6 +1498,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 20,
+    marginTop:40
   },
   logButtonContent: {
     flexDirection: "row",
