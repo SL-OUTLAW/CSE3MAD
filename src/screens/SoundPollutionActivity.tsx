@@ -37,7 +37,7 @@ function meterToDb(metering: number | undefined) {
 
 
 function getSoundStatus(db: number) {
-  if (db <= 0) return "LISTENING";
+  if (db <= 0) return "SENSOR ACTIVE";
   if (db < 30) return "SAFE";
   if (db < 60) return "QUIET";
   if (db < 85) return "MODERATE";
@@ -251,9 +251,14 @@ export default function SoundPollutionActivity({
               labelColor: () => colours.text,
               style: { borderRadius: 16 },
               propsForDots: {
-                r: "2",
+                r: "0",
                 strokeWidth: "1",
                 stroke: colours.primary,
+              },
+              propsForBackgroundLines: {
+                strokeDasharray: "",
+                stroke: colours.border,
+                strokeWidth: highContrast ? 2 : 1,
               },
             }}
             bezier
@@ -267,10 +272,10 @@ export default function SoundPollutionActivity({
         <TouchableOpacity style={[styles.trackingButton, { backgroundColor: colours.primary }]} onPress={toggleReading}>
           <Text style={[styles.trackingButtonText, { fontSize: 20 * colours.textScale }]}>
             {isReading
-              ? "Pause reading"
+              ? "Pause"
               : hasStarted
-              ? "Resume reading"
-              : "Start reading"}
+              ? "Resume"
+              : "Start"}
           </Text>
         </TouchableOpacity>
 
