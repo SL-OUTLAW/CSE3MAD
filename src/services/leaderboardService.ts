@@ -1,4 +1,3 @@
-// services/leaderboardService.ts
 import {
   collection,
   query,
