@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { getUserSession } from "../src/services/userSessionService";
 
 type TeamData = {
   teamName: string;
@@ -24,6 +25,22 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
   const [rank, setRank] = useState<number | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
+    useEffect(() => {
+    const loadSavedSession = async () => {
+      const savedSession = await getUserSession();
+
+      if (!savedSession) {
+        return;
+      }
+
+      setTeamId(savedSession.teamId ?? "");
+      setTeamName(savedSession.teamName ?? "");
+      setGrade(savedSession.grade ?? "");
+      setTeamMembers(savedSession.teamMembers ?? []);
+    };
+
+    void loadSavedSession();
+  }, []);
 
   return (
     <TeamContext.Provider
