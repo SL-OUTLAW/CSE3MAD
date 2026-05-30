@@ -15,10 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTeam } from "../../../context/TeamContext";
 import { useAccessibility } from "../../../context/AccessibilityContext";
 import { listenToTeamRank } from "../../services/leaderboardService";
-import {
-  loadRecentChallenges,
-  RecentChallenge,
-} from "../../services/resultStorageService";
+
 import {
   listenToUpcomingChallengesForHome,
   UpcomingChallenge,
@@ -61,35 +58,11 @@ export default function HomeScreen() {
       
     }, [])
   );
-  const [recentChallenges, setRecentChallenges] = useState<RecentChallenge[]>(
-    [],
-  );
+
   const [upcomingChallenges, setUpcomingChallenges] = useState<
     UpcomingChallenge[]
   >([]);
   const [upcomingError, setUpcomingError] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadRecent() {
-      try {
-        const cachedRecentChallenges = await loadRecentChallenges(teamId || "");
-
-        if (isMounted) {
-          setRecentChallenges(cachedRecentChallenges);
-        }
-      } catch (error) {
-        console.log("Unable to load recent challenges:", error);
-      }
-    }
-
-    void loadRecent();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [teamId]);
 
   useEffect(() => {
     const unsubscribe = listenToUpcomingChallengesForHome(
@@ -135,15 +108,6 @@ export default function HomeScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={[styles.title, titleTextStyle]}>Side Quest</Text>
-
-          <Text
-            style={[
-              styles.subtitle,
-              { color: colours.text, fontSize: 20 * colours.textScale },
-            ]}
-          >
-            Welcome,
-          </Text>
 
           <Text
             style={[
@@ -206,84 +170,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[themedCardStyle, styles.recentCard]}> 
-            <View style={styles.cardTextGroup}>
-              <Text style={[styles.cardTitle, cardTitleStyle]}>
-                Recent challenges
-              </Text>
 
-              {recentChallenges.length === 0 ? (
-                <Text
-                  style={[
-                    styles.cardText,
-                    {
-                      color: colours.subText,
-                      fontSize: 14 * colours.textScale,
-                    },
-                  ]}
-                >
-                  No recent challenges yet.
-                </Text>
-              ) : (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.recentList}
-                >
-                  {recentChallenges.map((challenge) => (
-                    <TouchableOpacity
-                      key={challenge.activityId}
-                      style={[
-                        styles.recentItem,
-                        {
-                          backgroundColor: colours.background,
-                          borderColor: colours.border,
-                          borderWidth: highContrast ? 3 : 1,
-                        },
-                      ]}
-                      activeOpacity={0.7}
-                      onPress={() =>
-                        router.push({
-                          pathname: "../activity/[id]",
-                          params: { id: challenge.activityId },
-                        })
-                      }
-                    >
-                      <Text
-                        numberOfLines={2}
-                        style={[
-                          styles.challengeTitle,
-                          {
-                            color: colours.text,
-                            fontSize: 14 * colours.textScale,
-                          },
-                        ]}
-                      >
-                        {challenge.activityTitle}
-                      </Text>
-
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          styles.challengeMeta,
-                          {
-                            color: colours.subText,
-                            fontSize: 12 * colours.textScale,
-                          },
-                        ]}
-                      >
-                        Rating: {challenge.rating}/5
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              )}
-            </View>
-          </View>
           <View style={[themedCardStyle, styles.upcomingCard]}>
             <View style={styles.cardTextGroup}>
               <Text style={[styles.cardTitle, cardTitleStyle]}>
-                Upcoming challenges
+                Upcoming Challenges
               </Text>
 
               {upcomingError.length > 0 && (
@@ -318,7 +209,7 @@ export default function HomeScreen() {
               {upcomingChallenges.length > 0 && (
                 <ScrollView
                   nestedScrollEnabled
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator={true}
                   contentContainerStyle={styles.upcomingList}
                 >
                   {upcomingChallenges.map((challenge) => (
@@ -431,12 +322,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  recentCard: {
-    height: 175,
-    alignItems: "flex-start",
-  },
   upcomingCard: {
-    height: 312,
+    height: 500,
     marginBottom: 0,
     alignItems: "flex-start",
   },
@@ -451,17 +338,6 @@ const styles = StyleSheet.create({
   cardTextGroup: {
     flexDirection: "column",
     flex: 1,
-  },
-  recentList: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  recentItem: {
-    width: 150,
-    minHeight: 82,
-    borderRadius: 12,
-    padding: 10,
-    justifyContent: "space-between",
   },
   upcomingList: {
     gap: 10,

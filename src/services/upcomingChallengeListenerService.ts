@@ -35,7 +35,7 @@ Notifications.setNotificationHandler({
 
 async function showUpcomingChallengeNotification(
   title: string,
-  description: string
+  startTime : string
 ) {
   const permission = await Notifications.requestPermissionsAsync();
 
@@ -46,7 +46,7 @@ async function showUpcomingChallengeNotification(
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "New Upcoming Challenge",
-      body: `${title}\n${description}`,
+      body: `${title}\n\n${startTime}`,
     },
     trigger: null,
   });
