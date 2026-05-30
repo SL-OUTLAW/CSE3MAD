@@ -16,6 +16,11 @@ import { useTeam } from "../../../context/TeamContext";
 import { useAccessibility } from "../../../context/AccessibilityContext";
 import { listenToTeamRank } from "../../services/leaderboardService";
 
+import {
+  listenToUpcomingChallengesForHome,
+  UpcomingChallenge,
+} from "../../services/upcomingChallengeListenerService";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { teamName, grade, teamId, rank, score, setRank, setScore } = useTeam();
@@ -54,6 +59,25 @@ export default function HomeScreen() {
     }, [])
   );
 
+  const [upcomingChallenges, setUpcomingChallenges] = useState<
+    UpcomingChallenge[]
+  >([]);
+  const [upcomingError, setUpcomingError] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = listenToUpcomingChallengesForHome(
+      (challenges) => {
+        setUpcomingChallenges(challenges);
+        setUpcomingError("");
+      },
+      (message) => {
+        setUpcomingError(message);
+      },
+    );
+
+    return unsubscribe;
+  }, []);
+
   const themedCardStyle = [
     styles.card,
     {
@@ -84,15 +108,6 @@ export default function HomeScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={[styles.title, titleTextStyle]}>Side Quest</Text>
-
-          <Text
-            style={[
-              styles.subtitle,
-              { color: colours.text, fontSize: 20 * colours.textScale },
-            ]}
-          >
-            Welcome,
-          </Text>
 
           <Text
             style={[
@@ -155,17 +170,113 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[themedCardStyle, styles.shortInfoCard]}>
-            <View style={styles.cardTextGroup}>
-              <Text style={[styles.cardTitle, cardTitleStyle]}>Recent</Text>
-            </View>
-          </View>
 
           <View style={[themedCardStyle, styles.upcomingCard]}>
             <View style={styles.cardTextGroup}>
               <Text style={[styles.cardTitle, cardTitleStyle]}>
-                Upcoming challenges
+                Upcoming Challenges
               </Text>
+
+              {upcomingError.length > 0 && (
+                <Text
+                  style={[
+                    styles.cardText,
+                    {
+                      color: colours.danger,
+                      fontSize: 14 * colours.textScale,
+                    },
+                  ]}
+                >
+                  {upcomingError}
+                </Text>
+              )}
+
+              {upcomingError.length === 0 &&
+                upcomingChallenges.length === 0 && (
+                  <Text
+                    style={[
+                      styles.cardText,
+                      {
+                        color: colours.subText,
+                        fontSize: 14 * colours.textScale,
+                      },
+                    ]}
+                  >
+                    No upcoming challenges yet.
+                  </Text>
+                )}
+
+              {upcomingChallenges.length > 0 && (
+                <ScrollView
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={true}
+                  contentContainerStyle={styles.upcomingList}
+                >
+                  {upcomingChallenges.map((challenge) => (
+                    <TouchableOpacity
+                      key={challenge.id}
+                      style={[
+                        styles.upcomingItem,
+                        {
+                          backgroundColor: colours.background,
+                          borderColor: colours.border,
+                          borderWidth: highContrast ? 3 : 1,
+                        },
+                      ]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (!challenge.activityId) {
+                          return;
+                        }
+
+                        router.push({
+                          pathname: "../activity/[id]",
+                          params: { id: challenge.activityId },
+                        });
+                      }}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.challengeTitle,
+                          {
+                            color: colours.text,
+                            fontSize: 15 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.title}
+                      </Text>
+
+                      <Text
+                        numberOfLines={2}
+                        style={[
+                          styles.challengeMeta,
+                          {
+                            color: colours.subText,
+                            fontSize: 12 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.description}
+                      </Text>
+
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.challengeMeta,
+                          {
+                            color: colours.primary,
+                            fontSize: 12 * colours.textScale,
+                          },
+                        ]}
+                      >
+                        {challenge.startTime}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -211,11 +322,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  shortInfoCard: {
-    alignItems: "flex-start",
-  },
   upcomingCard: {
-    height: 312,
+    height: 500,
     marginBottom: 0,
     alignItems: "flex-start",
   },
@@ -230,5 +338,21 @@ const styles = StyleSheet.create({
   cardTextGroup: {
     flexDirection: "column",
     flex: 1,
+  },
+  upcomingList: {
+    gap: 10,
+    paddingBottom: 4,
+  },
+  upcomingItem: {
+    width: "100%",
+    borderRadius: 12,
+    padding: 12,
+  },
+  challengeTitle: {
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  challengeMeta: {
+    lineHeight: 17,
   },
 });
