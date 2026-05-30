@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import { Video, ResizeMode } from "expo-av";
 import { saveDraft, loadDraft } from "../services/resultStorageService";
 
 const StarRating = ({
@@ -27,7 +28,6 @@ const StarRating = ({
   onRatingChange: (rating: number) => void;
 }) => {
   const { colours } = useAccessibility();
-
   const stars = [1, 2, 3, 4, 5];
   return (
     <View style={styles.starContainer}>
@@ -54,22 +54,62 @@ const StarRating = ({
 
 type Attachment = {
   uri: string;
-  type: "image" | "video";
+  type: "video";
   thumbnail?: string;
+};
+
+const VideoPreviewModal = ({
+  uri,
+  visible,
+  onClose,
+}: {
+  uri: string | null;
+  visible: boolean;
+  onClose: () => void;
+}) => {
+  const { colours } = useAccessibility();
+  return (
+    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
+      <View style={styles.videoModalOverlay}>
+        <View
+          style={[
+            styles.videoModalContainer,
+            { backgroundColor: colours.background },
+          ]}
+        >
+          <TouchableOpacity style={styles.videoModalClose} onPress={onClose}>
+            <Text style={styles.videoModalCloseText}>✕</Text>
+          </TouchableOpacity>
+          {uri && (
+            <Video
+              source={{ uri }}
+              style={styles.videoPlayer}
+              useNativeControls
+              resizeMode={ResizeMode.CONTAIN}
+              isLooping={false}
+              shouldPlay
+            />
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
 };
 
 const AttachmentPreview = ({
   attachment,
   onRemove,
+  onPlay,
 }: {
   attachment: Attachment;
   onRemove: () => void;
+  onPlay: () => void;
 }) => {
   const { colours, highContrast } = useAccessibility();
+  const { thumbnail } = attachment;
 
-  const { uri, type, thumbnail } = attachment;
   return (
-    <View
+    <TouchableOpacity
       style={[
         styles.attachmentPreview,
         {
@@ -78,9 +118,11 @@ const AttachmentPreview = ({
           borderWidth: highContrast ? 2 : 1,
         },
       ]}
+      onPress={onPlay}
+      activeOpacity={0.7}
     >
-      {type === "image" ? (
-        <Image source={{ uri }} style={styles.attachmentImage} />
+      {thumbnail ? (
+        <Image source={{ uri: thumbnail }} style={styles.videoThumbnail} />
       ) : (
         <View
           style={[
@@ -88,24 +130,23 @@ const AttachmentPreview = ({
             { backgroundColor: colours.background },
           ]}
         >
-          {thumbnail ? (
-            <Image source={{ uri: thumbnail }} style={styles.videoThumbnail} />
-          ) : (
-            <Text
-              style={[
-                styles.videoPlaceholderText,
-                { fontSize: 32 * colours.textScale },
-              ]}
-            >
-              🎬
-            </Text>
-          )}
+          <Text
+            style={[
+              styles.videoPlaceholderText,
+              { fontSize: 32 * colours.textScale },
+            ]}
+          >
+            🎬
+          </Text>
         </View>
       )}
+      <View style={styles.playIconOverlay}>
+        <Text style={styles.playIconText}>▶</Text>
+      </View>
       <TouchableOpacity style={styles.removeAttachment} onPress={onRemove}>
         <Text style={styles.removeAttachmentText}>✕</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -121,7 +162,7 @@ export default function ResultsScreen() {
 
   useEffect(() => {
     console.log(
-      `[ResultsScreen] Mounted with teamId: ${teamId}, activityId: ${activityId}`,
+      `[ResultsScreen] Mounted with teamId: ${teamId}, activityId: ${activityId}`
     );
   }, [teamId, activityId]);
 
@@ -129,12 +170,12 @@ export default function ResultsScreen() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [selectedVideoUri, setSelectedVideoUri] = useState<string | null>(null);
 
+  
   useEffect(() => {
     if (!teamId || !activityId) {
-      console.log(
-        "[ResultsScreen] Cannot load draft: missing teamId or activityId",
-      );
+      console.log("[ResultsScreen] Cannot load draft: missing teamId or activityId");
       return;
     }
     loadDraft(teamId, activityId)
@@ -144,7 +185,11 @@ export default function ResultsScreen() {
           setResultText(draft.resultText);
           setRating(draft.rating);
           setComment(draft.comment);
-          setAttachments(draft.attachments);
+          
+          const videoAttachments = draft.attachments.filter(
+            (att: any) => att.type === "video"
+          ) as Attachment[];
+          setAttachments(videoAttachments);
         } else {
           console.log("[ResultsScreen] No draft found");
         }
@@ -154,9 +199,7 @@ export default function ResultsScreen() {
 
   const saveCurrentDraft = async () => {
     if (!teamId || !activityId) {
-      console.log(
-        "[ResultsScreen] Cannot save draft: missing teamId/activityId",
-      );
+      console.log("[ResultsScreen] Cannot save draft: missing teamId/activityId");
       return;
     }
     console.log("[ResultsScreen] Saving draft...");
@@ -166,7 +209,7 @@ export default function ResultsScreen() {
       resultText,
       rating,
       comment,
-      attachments: attachments.map(({ uri, type }) => ({ uri, type })),
+      attachments: attachments.map(({ uri }) => ({ uri, type: "video" as const })),
     });
     console.log("[ResultsScreen] Draft saved");
   };
@@ -187,7 +230,7 @@ export default function ResultsScreen() {
     if (status !== "granted") {
       Alert.alert(
         "Permission needed",
-        "Please grant permission to access your photos and videos.",
+        "Please grant permission to access your videos."
       );
       return false;
     }
@@ -195,7 +238,7 @@ export default function ResultsScreen() {
   };
 
   const generateThumbnail = async (
-    videoUri: string,
+    videoUri: string
   ): Promise<string | undefined> => {
     try {
       const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
@@ -212,18 +255,18 @@ export default function ResultsScreen() {
   const pickAttachment = async () => {
     if (!(await requestPermissions())) return;
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
+      mediaTypes: ["videos"],
       allowsEditing: true,
       quality: 0.8,
     });
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
-      const type = asset.type === "video" ? "video" : "image";
-      let thumbnail: string | undefined;
-      if (type === "video") {
-        thumbnail = await generateThumbnail(asset.uri);
+      if (asset.type !== "video") {
+        Alert.alert("Invalid selection", "Please select a video file.");
+        return;
       }
-      setAttachments((prev) => [...prev, { uri: asset.uri, type, thumbnail }]);
+      const thumbnail = await generateThumbnail(asset.uri);
+      setAttachments((prev) => [...prev, { uri: asset.uri, type: "video", thumbnail }]);
     }
   };
 
@@ -243,235 +286,245 @@ export default function ResultsScreen() {
   ];
 
   return (
-    <Modal
-      visible={true}
-      transparent={true}
-      animationType="none"
-      onRequestClose={handleClose}
-      presentationStyle="fullScreen"
-    >
-      <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoidingView}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View
-            style={[
-              styles.sheet,
-              {
-                backgroundColor: colours.background,
-                borderColor: colours.border,
-                borderTopWidth: highContrast ? 3 : 0,
-              },
-            ]}
+    <>
+      <Modal
+        visible={true}
+        transparent={true}
+        animationType="none"
+        onRequestClose={handleClose}
+        presentationStyle="fullScreen"
+      >
+        <View style={styles.overlay}>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoidingView}
+            behavior="padding"
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -600}
           >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.scrollContent}
+            <View
+              style={[
+                styles.sheet,
+                {
+                  backgroundColor: colours.background,
+                  borderColor: colours.border,
+                  borderTopWidth: highContrast ? 3 : 0,
+                },
+              ]}
             >
-              <View style={styles.header}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.scrollContent}
+              >
+                <View style={styles.header}>
+                  <Text
+                    style={[
+                      styles.title,
+                      { color: colours.text, fontSize: 22 * colours.textScale },
+                    ]}
+                  >
+                    Result Logging
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleClose}
+                    style={[
+                      styles.closeBtn,
+                      {
+                        backgroundColor: colours.card,
+                        borderColor: colours.border,
+                        borderWidth: highContrast ? 2 : 1,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.closeBtnText,
+                        { color: colours.text, fontSize: 18 * colours.textScale },
+                      ]}
+                    >
+                      ✕
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
                 <Text
                   style={[
-                    styles.title,
-                    { color: colours.text, fontSize: 22 * colours.textScale },
+                    styles.subtitle,
+                    { color: colours.text, fontSize: 18 * colours.textScale },
                   ]}
                 >
-                  Result Logging
+                  {activityTitle || "Selected Activity"}
                 </Text>
+
+                <View style={styles.section}>
+                  <Text
+                    style={[
+                      styles.sectionLabel,
+                      { color: colours.text, fontSize: 16 * colours.textScale },
+                    ]}
+                  >
+                    Result
+                  </Text>
+                  <TextInput
+                    style={[inputStyle, styles.textInput, { height: 250 }]}
+                    placeholder="Enter your results..."
+                    value={resultText}
+                    onChangeText={setResultText}
+                    multiline
+                    textAlignVertical="top"
+                    placeholderTextColor={colours.subText}
+                  />
+                </View>
+
+                <View style={styles.section}>
+                  <Text
+                    style={[
+                      styles.sectionLabel,
+                      { color: colours.text, fontSize: 16 * colours.textScale },
+                    ]}
+                  >
+                    Video Attachments
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.attachmentButton,
+                      {
+                        backgroundColor: colours.card,
+                        borderColor: colours.border,
+                        borderWidth: highContrast ? 3 : 1,
+                      },
+                    ]}
+                    onPress={pickAttachment}
+                  >
+                    <Text
+                      style={[
+                        styles.attachmentButtonText,
+                        {
+                          color: colours.text,
+                          fontSize: 14 * colours.textScale,
+                        },
+                      ]}
+                    >
+                      + Add Video
+                    </Text>
+                  </TouchableOpacity>
+                  {attachments.length > 0 && (
+                    <View style={styles.attachmentList}>
+                      {attachments.map((att, index) => (
+                        <AttachmentPreview
+                          key={`${att.uri}-${index}`}
+                          attachment={att}
+                          onRemove={() => removeAttachment(index)}
+                          onPlay={() => setSelectedVideoUri(att.uri)}
+                        />
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.section}>
+                  <Text
+                    style={[
+                      styles.sectionLabel,
+                      {
+                        color: colours.text,
+                        fontSize: 16 * colours.textScale,
+                        marginBottom: 0,
+                      },
+                    ]}
+                  >
+                    Rating
+                  </Text>
+                  <StarRating rating={rating} onRatingChange={setRating} />
+                  {rating > 0 && (
+                    <Text
+                      style={[
+                        styles.ratingHint,
+                        {
+                          color: colours.primary,
+                          fontSize: 14 * colours.textScale,
+                        },
+                      ]}
+                    >
+                      {rating === 1 && "Poor"}
+                      {rating === 2 && "Fair"}
+                      {rating === 3 && "Good"}
+                      {rating === 4 && "Very Good"}
+                      {rating === 5 && "Excellent"}
+                    </Text>
+                  )}
+                </View>
+
+                <View style={styles.section}>
+                  <Text
+                    style={[
+                      styles.sectionLabel,
+                      { color: colours.text, fontSize: 16 * colours.textScale },
+                    ]}
+                  >
+                    Comment / Reflection
+                  </Text>
+                  <TextInput
+                    style={[inputStyle, styles.commentInput]}
+                    placeholder="Add any additional comments or reflections..."
+                    value={comment}
+                    onChangeText={setComment}
+                    multiline
+                    placeholderTextColor={colours.subText}
+                  />
+                </View>
+
                 <TouchableOpacity
-                  onPress={handleClose}
                   style={[
-                    styles.closeBtn,
-                    {
-                      backgroundColor: colours.card,
-                      borderColor: colours.border,
-                      borderWidth: highContrast ? 2 : 1,
-                    },
+                    styles.primaryButton,
+                    { backgroundColor: colours.primary },
                   ]}
+                  onPress={handleManualSave}
                 >
                   <Text
                     style={[
-                      styles.closeBtnText,
-                      { color: colours.text, fontSize: 18 * colours.textScale },
+                      styles.buttonText,
+                      { color: "#ffffff", fontSize: 16 * colours.textScale },
                     ]}
                   >
-                    ✕
+                    Save
                   </Text>
                 </TouchableOpacity>
-              </View>
 
-              <Text
-                style={[
-                  styles.subtitle,
-                  { color: colours.text, fontSize: 18 * colours.textScale },
-                ]}
-              >
-                {activityTitle || "Selected Activity"}
-              </Text>
-
-              <View style={styles.section}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    { color: colours.text, fontSize: 16 * colours.textScale },
-                  ]}
-                >
-                  Result
-                </Text>
-                <TextInput
-                  style={[inputStyle, styles.textInput, { height: 250 }]}
-                  placeholder="Enter your results..."
-                  value={resultText}
-                  onChangeText={setResultText}
-                  multiline
-                  textAlignVertical="top"
-                  placeholderTextColor={colours.subText}
-                />
-              </View>
-
-              <View style={styles.section}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    { color: colours.text, fontSize: 16 * colours.textScale },
-                  ]}
-                >
-                  Attachments
-                </Text>
                 <TouchableOpacity
                   style={[
-                    styles.attachmentButton,
+                    styles.secondaryButton,
                     {
                       backgroundColor: colours.card,
-                      borderColor: colours.border,
+                      borderColor: colours.primary,
                       borderWidth: highContrast ? 3 : 1,
                     },
                   ]}
-                  onPress={pickAttachment}
+                  onPress={handleClose}
                 >
                   <Text
                     style={[
-                      styles.attachmentButtonText,
-                      {
-                        color: colours.text,
-                        fontSize: 14 * colours.textScale,
-                      },
-                    ]}
-                  >
-                    + Add Attachment
-                  </Text>
-                </TouchableOpacity>
-                {attachments.length > 0 && (
-                  <View style={styles.attachmentList}>
-                    {attachments.map((att, index) => (
-                      <AttachmentPreview
-                        key={`${att.uri}-${index}`}
-                        attachment={att}
-                        onRemove={() => removeAttachment(index)}
-                      />
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.section}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    {
-                      color: colours.text,
-                      fontSize: 16 * colours.textScale,
-                      marginBottom: 0,
-                    },
-                  ]}
-                >
-                  Rating
-                </Text>
-                <StarRating rating={rating} onRatingChange={setRating} />
-                {rating > 0 && (
-                  <Text
-                    style={[
-                      styles.ratingHint,
+                      styles.secondaryButtonText,
                       {
                         color: colours.primary,
-                        fontSize: 14 * colours.textScale,
+                        fontSize: 16 * colours.textScale,
                       },
                     ]}
                   >
-                    {rating === 1 && "Poor"}
-                    {rating === 2 && "Fair"}
-                    {rating === 3 && "Good"}
-                    {rating === 4 && "Very Good"}
-                    {rating === 5 && "Excellent"}
+                    Close
                   </Text>
-                )}
-              </View>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
 
-              <View style={styles.section}>
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    { color: colours.text, fontSize: 16 * colours.textScale },
-                  ]}
-                >
-                  Comment / Reflection
-                </Text>
-                <TextInput
-                  style={[inputStyle, styles.commentInput]}
-                  placeholder="Add any additional comments or reflections..."
-                  value={comment}
-                  onChangeText={setComment}
-                  multiline
-                  placeholderTextColor={colours.subText}
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.primaryButton,
-                  { backgroundColor: colours.primary },
-                ]}
-                onPress={handleManualSave}
-              >
-                <Text
-                  style={[
-                    styles.buttonText,
-                    { color: "#ffffff", fontSize: 16 * colours.textScale },
-                  ]}
-                >
-                  Save
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.secondaryButton,
-                  {
-                    backgroundColor: colours.card,
-                    borderColor: colours.primary,
-                    borderWidth: highContrast ? 3 : 1,
-                  },
-                ]}
-                onPress={handleClose}
-              >
-                <Text
-                  style={[
-                    styles.secondaryButtonText,
-                    {
-                      color: colours.primary,
-                      fontSize: 16 * colours.textScale,
-                    },
-                  ]}
-                >
-                  Close
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
+      <VideoPreviewModal
+        uri={selectedVideoUri}
+        visible={!!selectedVideoUri}
+        onClose={() => setSelectedVideoUri(null)}
+      />
+    </>
   );
 }
 
@@ -493,14 +546,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingTop: 12,
     maxHeight: "90%",
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#cbd5e1",
-    alignSelf: "center",
-    marginBottom: 20,
   },
   scrollContent: {
     paddingBottom: 20,
@@ -581,7 +626,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  attachmentImage: { width: "100%", height: "100%", resizeMode: "cover" },
+  videoThumbnail: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
   videoPlaceholder: {
     width: "100%",
     height: "100%",
@@ -589,12 +638,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#cbd5e1",
   },
-  videoThumbnail: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
   videoPlaceholderText: { fontSize: 32 },
+  playIconOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  playIconText: {
+    fontSize: 28,
+    color: "white",
+    fontWeight: "bold",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
   removeAttachment: {
     position: "absolute",
     top: 4,
@@ -636,4 +698,37 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "800" },
   secondaryButtonText: { color: "#2563eb", fontSize: 16, fontWeight: "800" },
+  videoModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  videoModalContainer: {
+    width: "90%",
+    height: "60%",
+    borderRadius: 16,
+    overflow: "hidden",
+    position: "relative",
+  },
+  videoModalClose: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  videoModalCloseText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  videoPlayer: {
+    flex: 1,
+  },
 });
