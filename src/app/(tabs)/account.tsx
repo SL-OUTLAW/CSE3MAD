@@ -44,54 +44,13 @@ export default function AccountScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      style={[styles.safeArea, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
       edges={["top", "left", "right"]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text
-          style={[
-            styles.title,
-            { color: colours.text, fontSize: 28 * colours.textScale },
-          ]}
-        >
-          Account
-        </Text>
-
-        <View 
-          style={[
-            styles.profileCard,
-          {
-            backgroundColor: colours.card,
-            borderColor: colours.border,
-            borderWidth: highContrast ? 3 : 1,
-          },
-          ]}
-        >
-          <View style={[styles.avatar, { backgroundColor: colours.primary }]}>
-            <Text style={styles.avatarText}>T</Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text
-              style={[
-                styles.profileName,
-                { color: colours.text, fontSize: 18 * colours.textScale },
-              ]}
-            >
-              {teamName || "Team Name"}
-            </Text>
-            <Text
-              style={[
-                styles.profileSub,
-                { color: colours.subText, fontSize: 14 * colours.textScale },
-              ]}            >
-              Grade {grade || "X"}
-            </Text>
-          </View>
-        </View>
-
         <View
           style={[
-            styles.menuContainer,
+            styles.teamCard,
             {
               backgroundColor: colours.card,
               borderColor: colours.border,
@@ -99,122 +58,234 @@ export default function AccountScreen() {
             },
           ]}
         >
-          {MENU_ITEMS.map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              style={[
-                styles.menuRow,
-                { borderBottomColor: colours.rowBorder },
-              ]}
-              onPress={() => {
-                if (item.label === "Log out") {
-                void handleLogout();
-                return;
-              }
+          <View style={[styles.avatar, { backgroundColor: colours.primary }]}>
+            <Text style={styles.avatarText}>
+              {(teamName || "T").charAt(0).toUpperCase()}
+            </Text>
+          </View>
 
-              if (item.route) {
-                router.push(item.route as any);
-           }
-          }}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.menuLabel,
-                  { color: colours.text, fontSize: 16 * colours.textScale },
-                ]}
-              >
-                {item.label}
-              </Text>
-              <Text 
+          <View style={styles.teamInfo}>
+            <Text
               style={[
-                styles.menuChevron,
-                { color: colours.subText, fontSize: 22 * colours.textScale },
+                styles.teamName,
+                { color: colours.text, fontSize: 16 * colours.textScale },
               ]}
-              >
-                ›
-              </Text>
-            </TouchableOpacity>
-          ))}
+            >
+              {teamName || "Team Name"}
+            </Text>
+
+            <Text
+              style={[
+                styles.gradeText,
+                { color: colours.subText, fontSize: 12 * colours.textScale },
+              ]}
+            >
+              Grade {grade || "X"}
+            </Text>
+          </View>
         </View>
+
+        <Text
+          style={[
+            styles.sectionLabel,
+            { color: colours.subText, fontSize: 12 * colours.textScale },
+          ]}
+        >
+          Team Information
+        </Text>
+
+        <View
+          style={[
+            styles.cardGroup,
+            {
+              backgroundColor: colours.card,
+              borderColor: colours.border,
+              borderWidth: highContrast ? 3 : 1,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => router.push("/team-edit" as any)}
+            activeOpacity={0.75}
+          >
+            <Text
+              style={[
+                styles.rowText,
+                { color: colours.text, fontSize: 15 * colours.textScale },
+              ]}
+            >
+              Team Members
+            </Text>
+            <Text style={[styles.chevron, { color: colours.subText }]}>›</Text>
+          </TouchableOpacity>
+
+        </View>
+
+        <Text
+          style={[
+            styles.sectionLabel,
+            { color: colours.subText, fontSize: 12 * colours.textScale },
+          ]}
+        >
+          Settings
+        </Text>
+
+        <View
+          style={[
+            styles.cardGroup,
+            {
+              backgroundColor: colours.card,
+              borderColor: colours.border,
+              borderWidth: highContrast ? 3 : 1,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => router.push("/settings" as any)}
+            activeOpacity={0.75}
+          >
+            <Text
+              style={[
+                styles.rowText,
+                { color: colours.text, fontSize: 15 * colours.textScale },
+              ]}
+            >
+              Accessibility
+            </Text>
+            <Text style={[styles.chevron, { color: colours.subText }]}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.row} activeOpacity={0.75}>
+            <Text
+              style={[
+                styles.rowText,
+                { color: colours.text, fontSize: 15 * colours.textScale },
+              ]}
+            >
+              Help & Support
+            </Text>
+            <Text style={[styles.chevron, { color: colours.subText }]}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={() => {
+            void handleLogout();
+          }}
+          activeOpacity={0.75}
+        >
+          <Text style={styles.signOutText}>Log Out</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f8fafc" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f8f5ff",
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 28,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 16,
-    color: "#0f172a",
+  teamCard: {
+  backgroundColor: "#ffffff",
+  borderRadius: 26,
+  borderWidth: 1,
+  borderColor: "#ede9fe",
+  paddingHorizontal: 22,
+  paddingVertical: 22,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 18,
+  marginBottom: 24,
+  shadowColor: "#312e81",
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.08,
+  shadowRadius: 18,
+  elevation: 4,
+},
+avatar: {
+  width: 78,
+  height: 78,
+  borderRadius: 26,
+  backgroundColor: "#7c3aed",
+  alignItems: "center",
+  justifyContent: "center",
+},
+avatarText: {
+  color: "#ffffff",
+  fontSize: 34,
+  fontWeight: "900",
   },
-  profileCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    marginBottom: 20,
+  teamInfo: {
+    flex: 1,
   },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#2563eb",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#ffffff",
+  teamName: {
     fontSize: 24,
-    fontWeight: "800",
-  },
-  profileInfo: { flex: 1 },
-  profileName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0f172a",
+    fontWeight: "900",
+    color: "#18181b",
     marginBottom: 4,
   },
-  profileSub: {
-    fontSize: 14,
-    color: "#64748b",
+  gradeText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#71717a",
+    marginBottom: 10,
   },
-  menuContainer: {
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#7c3aed",
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  cardGroup: {
     backgroundColor: "#ffffff",
-    borderRadius: 14,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#ede9fe",
     overflow: "hidden",
+    marginBottom: 18,
   },
-  menuRow: {
+  row: {
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 18,
-    paddingVertical: 18,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: "#f4f4f5",
   },
-  menuLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0f172a",
+  rowText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#18181b",
   },
-  menuChevron: {
+  chevron: {
     fontSize: 22,
-    color: "#94a3b8",
-    lineHeight: 24,
+    fontWeight: "800",
+    color: "#a1a1aa",
+  },
+  signOutButton: {
+    borderWidth: 1,
+    borderColor: "#ef4444",
+    borderRadius: 16,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  signOutText: {
+    color: "#ef4444",
+    fontSize: 15,
+    fontWeight: "900",
   },
 });

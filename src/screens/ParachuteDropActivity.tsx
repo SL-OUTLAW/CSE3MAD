@@ -221,16 +221,50 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
   };
 
   return (
-    <View style={[styles.outer, { backgroundColor: colours.background }]}>
-      <KeyboardAvoidingView
-        style={[styles.frame, { backgroundColor: colours.background }]}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <View
+      style={[styles.outer, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
       >
+        <KeyboardAvoidingView
+  style={[
+    styles.frame,
+    { backgroundColor: highContrast ? colours.background : "#f8f5ff" },
+  ]}
+  behavior={Platform.OS === "ios" ? "padding" : undefined}
+>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={[styles.title, { color: colours.text, fontSize: 22 * colours.textScale }]}>Parachute Drop Challenge</Text>
+          <View style={styles.heroCard}>
+  <View style={styles.heroIconBox}>
+    <Text style={[styles.heroEmoji, { fontSize: 34 * colours.textScale }]}>
+      🪂
+    </Text>
+  </View>
+
+  <View style={styles.heroTextGroup}>
+    <Text
+      style={[
+        styles.title,
+        { color: colours.text, fontSize: 24 * colours.textScale },
+      ]}
+    >
+      Parachute Drop{"\n"}Challenge
+    </Text>
+
+    <Text
+      style={[
+        styles.heroSubtitle,
+        { color: colours.subText, fontSize: 14 * colours.textScale },
+      ]}
+    >
+      Engineering • Physics
+    </Text>
+  </View>
+</View>
 
           <View style={cardStyle}>
-            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Slow-motion Video Player</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionEmoji}>🎥</Text>
+              <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Slow-motion Video Player</Text>
+            </View>
             <Text style={[styles.helpText, { color: colours.subText, fontSize: 14 * colours.textScale }]}>
               Record or select a video to view in slow motion. {"\n"}Use the speed slider to slow down playback.
             </Text>
@@ -350,8 +384,10 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
           </View>
 
           <View style={cardStyle}>
-            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Measurements</Text>
-
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionEmoji}>📏</Text>
+              <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Measurements</Text>
+            </View>
             <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Drop height (m)</Text>
             <TextInput
               style={inputStyle}
@@ -413,7 +449,10 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
           </View>
 
           <View style={[cardStyle, { marginBottom: 40 }]}>
-            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Calculated Results</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionEmoji}>📊</Text>
+              <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Calculated Results</Text>
+            </View>
             <View style={styles.row}>
               <View style={styles.metric}>
                 <Text style={[styles.metricValue, { color: colours.primary, fontSize: 24 * colours.textScale }]}>{round(result.velocity)} m/s</Text>
@@ -433,10 +472,10 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
             )}
           </View>
 
-          <TouchableOpacity style={[styles.logButton, { borderColor: colours.border, backgroundColor: colours.card, borderWidth: highContrast ? 3 : 2 }]} onPress={handleLogResults}>
+          <TouchableOpacity style={[styles.logButton, { backgroundColor: "#7c3aed", borderColor: "#7c3aed", borderWidth: highContrast ? 3 : 1 }]} onPress={handleLogResults}>
             <View style={styles.logButtonContent}>
-              <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
-              <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
+              <Text style={[styles.logButtonText, { color: "#ffffff", fontSize: 20 * colours.textScale }]}>Log Results</Text>
+              <Text style={[styles.arrowIcon, { color: "#ffffff" }]}>➔</Text>
             </View>
           </TouchableOpacity>
         <View style={styles.bottomRow}>
@@ -444,7 +483,7 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
             <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
-            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
         </ScrollView>
@@ -454,28 +493,29 @@ export default function ParachuteDropActivity({ onBack, onLogResults, onSubmit }
 }
 
 const styles = StyleSheet.create({
-  outer: { flex: 1, backgroundColor: "#ffffff" },
+  outer: { flex: 1, backgroundColor: "#f8f5ff" },
   frame: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 58,
     paddingBottom: 28,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8f5ff",
   },
-  title: { fontSize: 22, fontWeight: "800", color: "#000000", marginBottom: 40 },
+  title: { fontSize: 24, fontWeight: "900", color: "#18181b", lineHeight: 32 },
   card: {
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#ede9fe",
     borderRadius: 24,
     padding: 20,
     backgroundColor: "#ffffff",
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "#312e81",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
-  cardTitle: { fontSize: 18, color: "#666666", fontWeight: "600", marginBottom: 14 },
+  cardTitle: { fontSize: 18, color: "#18181b", fontWeight: "900" },
   helpText: { fontSize: 14, color: "#64748b", lineHeight: 20, marginBottom: 12 },
   row: { flexDirection: "row", gap: 10 },
   bottomRow: {
@@ -486,12 +526,13 @@ const styles = StyleSheet.create({
   outlineButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#1d5db1",
-    borderRadius: 14,
+    borderColor: "#7c3aed",
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
-  outlineButtonText: { color: "#1d5db1", fontSize: 15, fontWeight: "800" },
+  outlineButtonText: { color: "#7c3aed", fontSize: 15, fontWeight: "900" },
   videoStatus: { fontSize: 14, color: "#ff0000", fontWeight: "700", marginTop: 10, marginBottom: 20 },
   label: {
     fontSize: 14,
@@ -501,13 +542,14 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderColor: "#e4e4e7",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     fontSize: 16,
-    marginBottom: 12,
-    color: "#0f172a",
+    marginBottom: 14,
+    color: "#18181b",
+    backgroundColor: "#fafafa",
   },
   metric: { flex: 1, alignItems: "center", marginBottom: 12 },
   metricValue: { fontSize: 24, fontWeight: "800", color: "#1d5db1" },
@@ -515,13 +557,14 @@ const styles = StyleSheet.create({
   resultText: { fontSize: 15, color: "#1f2937", marginBottom: 6, fontWeight: "600" },
   status: { fontSize: 15, color: "#1d5db1", fontWeight: "800", marginTop: 4 },
 logButton: {
-    borderWidth: 2,
+    borderWidth: 1,
     height: 58,
-    borderColor: "#000000",
+    borderColor: "#7c3aed",
     borderRadius: 18,
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 20,
+    backgroundColor: "#7c3aed",
   },
   logButtonContent: {
     flexDirection: "row",
@@ -530,39 +573,39 @@ logButton: {
   },
   logButtonText: {
     fontSize: 20,
-    fontWeight: "400",
-    color: "#000000",
+    fontWeight: "900",
+    color: "#7c3aed",
     textAlign: "center",
     flex: 1,
   },
   arrowIcon: {
     fontSize: 20,
-    color: "#999999",
+    color: "#7c3aed",
   },
   quitButton: {
-    backgroundColor: "#F08787",
-    borderWidth: 2,
-    borderColor: "#000000",
-    borderRadius: 30,
+    backgroundColor: "#ef4444",
+    borderWidth: 0,
+    borderRadius: 18,
     height: 58,
     paddingVertical: 10,
     width: "45%",
     alignItems: "center",
+    justifyContent: "center",
   },
   submitButton: {
-    backgroundColor: "#A3DC9A",
-    borderWidth: 2,
+    backgroundColor: "#22c55e",
+    borderWidth: 0,
     height: 58,
-    borderColor: "#000000",
-    borderRadius: 30,
+    borderRadius: 18,
     paddingVertical: 10,
     width: "45%",
     alignItems: "center",
+    justifyContent: "center",
   },
   bottomButtonText: {
-    fontSize: 24,
-    fontWeight: "400",
-    color: "#000000",
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#ffffff",
   },
   videoContainer: {
     marginTop: 16,
@@ -637,4 +680,47 @@ logButton: {
     fontSize: 16,
     fontWeight: "bold",
   },
+  heroCard: {
+  backgroundColor: "#ffffff",
+  borderRadius: 26,
+  padding: 18,
+  marginBottom: 20,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 18,
+  borderWidth: 1,
+  borderColor: "#ede9fe",
+  shadowColor: "#312e81",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.06,
+  shadowRadius: 14,
+  elevation: 3,
+},
+heroIconBox: {
+  width: 76,
+  height: 76,
+  borderRadius: 22,
+  backgroundColor: "#f5f3ff",
+  alignItems: "center",
+  justifyContent: "center",
+},
+heroEmoji: {
+  textAlign: "center",
+},
+heroTextGroup: {
+  flex: 1,
+},
+heroSubtitle: {
+  fontWeight: "800",
+  marginTop: 4,
+},
+sectionTitleRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 12,
+},
+sectionEmoji: {
+  fontSize: 24,
+  marginRight: 10,
+},
 });

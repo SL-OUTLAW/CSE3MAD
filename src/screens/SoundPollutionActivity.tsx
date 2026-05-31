@@ -175,15 +175,22 @@ export default function SoundPollutionActivity({
   }, []);
 
   return (
-    <View style={[styles.outerContainer, { backgroundColor: colours.background }]}>
-      <ScrollView
-        style={[styles.phoneFrame, { backgroundColor: colours.background }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[styles.headerTitle, { color: colours.text, fontSize: 22 * colours.textScale }]}>Sound Pollution Hunter</Text>
-
-        <View style={[cardStyle, { minHeight: 200 }]}>
-          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>Live Sensor Data</Text>
+    <View
+  style={[
+    styles.outerContainer,
+    { backgroundColor: highContrast ? colours.background : "#f8f5ff" },
+  ]}
+>
+  <ScrollView
+    style={[
+      styles.phoneFrame,
+      { backgroundColor: highContrast ? colours.background : "#f8f5ff" },
+    ]}
+    showsVerticalScrollIndicator={false}
+  >
+          <View style={styles.heroCard}><View style={styles.heroIconBox}><Text style={styles.heroEmoji}>🔊</Text></View><View style={styles.heroTextGroup}><Text style={[styles.headerTitle, { color: colours.text, fontSize: 24 * colours.textScale }]}>Sound Pollution{"\n"}Hunter</Text><Text style={[styles.heroSubtitle, { color: colours.subText, fontSize: 14 * colours.textScale }]}>Environmental Science</Text></View></View>
+          <View style={[cardStyle, { minHeight: 200 }]}>
+          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>🎧 Live Sensor Data</Text>
 
           <View style={styles.metricsRow}>
             <View style={styles.metricColumn}>
@@ -230,7 +237,7 @@ export default function SoundPollutionActivity({
         </View>
 
         <View style={[cardStyle, { paddingBottom: 0 }]}>
-          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>Sound Chart (dB)</Text>
+          <Text style={[styles.cardHeader, { color: colours.text, fontSize: 18 * colours.textScale }]}>📈 Sound Chart (dB)</Text>
           <Text style={[styles.peakText, { color: colours.danger, fontSize: 14 * colours.textScale }]}>Peak: {result.peakDb} dB</Text>
 
           <LineChart
@@ -269,7 +276,7 @@ export default function SoundPollutionActivity({
           />
         </View>
 
-        <TouchableOpacity style={[styles.trackingButton, { backgroundColor: colours.primary }]} onPress={toggleReading}>
+        <TouchableOpacity style={[styles.trackingButton, { backgroundColor: "#7c3aed" }]} onPress={toggleReading}>
           <Text style={[styles.trackingButtonText, { fontSize: 20 * colours.textScale }]}>
             {isReading
               ? "Pause"
@@ -279,10 +286,10 @@ export default function SoundPollutionActivity({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.logButton, { borderColor: colours.border, backgroundColor: colours.card, borderWidth: highContrast ? 3 : 2 }]} onPress={handleLogResults}>
+        <TouchableOpacity style={[styles.logButton, { borderColor: "#7c3aed", backgroundColor: "#7c3aed", borderWidth: highContrast ? 3 : 1 }]} onPress={handleLogResults}>
           <View style={styles.logButtonContent}>
-            <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
-            <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
+            <Text style={[styles.logButtonText, { color: "#ffffff", fontSize: 20 * colours.textScale }]}>Log Results</Text>
+            <Text style={[styles.arrowIcon, { color: "#ffffff" }]}>➔</Text>
           </View>
         </TouchableOpacity>
         <View style={styles.bottomRow}>
@@ -290,7 +297,7 @@ export default function SoundPollutionActivity({
             <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
-            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -301,39 +308,41 @@ export default function SoundPollutionActivity({
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8f5ff",
   },
   phoneFrame: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 58,
     paddingBottom: 28,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8f5ff",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#000000",
-    marginBottom: 40,
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#18181b",
+    marginBottom: 4,
+    lineHeight: 32,
   },
   sensorCard: {
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#ede9fe",
     borderRadius: 24,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 20,
     backgroundColor: "#ffffff",
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "#312e81",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
   cardHeader: {
     fontSize: 18,
-    color: "#666666",
-    fontWeight: "600",
+    color: "#18181b",
+    fontWeight: "900",
     marginBottom: 18,
   },
   metricsRow: {
@@ -365,13 +374,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     width: "100%",
   },
-  descriptionText: {
-    fontSize: 14,
-    color: "#334155",
-    marginTop: 8,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
   sensorText: {
     fontSize: 15,
     color: "#dc2626",
@@ -396,7 +398,7 @@ const styles = StyleSheet.create({
   trackingButtonText: {
     color: "#ffffff",
     fontSize: 20,
-    fontWeight: "400",
+    fontWeight: "900",
   },
   logButton: {
     borderWidth: 2,
@@ -452,4 +454,9 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#000000",
   },
+  heroCard: { backgroundColor: "#ffffff", borderRadius: 26, padding: 18, marginBottom: 20, flexDirection: "row", alignItems: "center", gap: 18, borderWidth: 1, borderColor: "#ede9fe", shadowColor: "#312e81", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 3 },
+  heroIconBox: { width: 76, height: 76, borderRadius: 22, backgroundColor: "#f5f3ff", alignItems: "center", justifyContent: "center" },
+  heroEmoji: { fontSize: 34 },
+  heroTextGroup: { flex: 1 },
+  heroSubtitle: { fontWeight: "800", marginTop: 4 },
 });

@@ -7,11 +7,11 @@ import AccessibilitySettings from "../components/AccessibilitySettings";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { colours } = useAccessibility();
+  const { colours, highContrast } = useAccessibility();
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      style={[styles.safeArea, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
       edges={["top", "left", "right"]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -25,7 +25,7 @@ export default function SettingsScreen() {
               },
             ]}
           >
-            ‹ Back
+            ‹ Back to Account
           </Text>
         </TouchableOpacity>
 
@@ -50,7 +50,7 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          Accessibility options for dark mode, colour visibility, contrast, and text size.
+          Customize display, contrast, colour visibility, and text size.
         </Text>
 
         <AccessibilitySettings />
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 58,
     paddingBottom: 28,
   },
   backText: {
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontWeight: "800",
+    fontWeight: "900",
     marginBottom: 8,
   },
   description: {

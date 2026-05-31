@@ -39,7 +39,7 @@ export default function AccessibilitySettings() {
           { color: colours.text, fontSize: 20 * colours.textScale },
         ]}
       >
-        Accessibility
+      Display Settings
       </Text>
 
       <View style={styles.row}>
@@ -50,7 +50,7 @@ export default function AccessibilitySettings() {
               { color: colours.text, fontSize: 16 * colours.textScale },
             ]}
           >
-            Dark mode
+            🌙 Dark mode
           </Text>
           <Text
             style={[
@@ -81,7 +81,7 @@ export default function AccessibilitySettings() {
               { color: colours.text, fontSize: 16 * colours.textScale },
             ]}
           >
-            Colour blind mode
+            🎨 Colour blind mode
           </Text>
           <Text
             style={[
@@ -114,7 +114,7 @@ export default function AccessibilitySettings() {
               { color: colours.text, fontSize: 16 * colours.textScale },
             ]}
           >
-            High contrast
+            ◐ High contrast
           </Text>
           <Text
             style={[
@@ -146,7 +146,7 @@ export default function AccessibilitySettings() {
             { color: colours.text, fontSize: 16 * colours.textScale },
           ]}
         >
-          Text size
+          🔎 Text size
         </Text>
 
         <Text
@@ -198,26 +198,33 @@ export default function AccessibilitySettings() {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 16,
-  },
+  borderRadius: 22,
+  padding: 18,
+  marginTop: 18,
+  shadowColor: "#312e81",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.06,
+  shadowRadius: 14,
+  elevation: 3,
+},
   title: {
-    fontWeight: "800",
-    marginBottom: 12,
+    fontWeight: "900",
+    marginBottom: 14,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    paddingVertical: 14,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderBottomColor: "#ede9fe",
   },
   textBox: {
     flex: 1,
   },
   label: {
-    fontWeight: "700",
+    fontWeight: "900",
     marginBottom: 4,
   },
   hint: {
@@ -234,8 +241,8 @@ const styles = StyleSheet.create({
   },
   optionButton: {
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   optionText: {
     fontWeight: "700",

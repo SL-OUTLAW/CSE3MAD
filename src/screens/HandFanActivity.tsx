@@ -100,16 +100,15 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
   };
 
   return (
-    <View style={[styles.outer, { backgroundColor: colours.background }]}>
+    <View style={[styles.outer, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}>
       <KeyboardAvoidingView
-        style={[styles.frame, { backgroundColor: colours.background }]}
+        style={[styles.frame, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={[styles.title, { color: colours.text, fontSize: 22 * colours.textScale }]}>Hand Fan Challenge</Text>
-
+          <View style={styles.heroCard}><View style={styles.heroIconBox}><Text style={styles.heroEmoji}>🌬️</Text></View><View style={styles.heroTextGroup}><Text style={[styles.heroTitle, { color: colours.text, fontSize: 24 * colours.textScale }]}>Hand Fan{"\n"}Challenge</Text><Text style={[styles.heroSubtitle, { color: colours.subText, fontSize: 14 * colours.textScale }]}>Build • Test • Measure</Text></View></View>
           <View style={cardStyle}>
-            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Test Measurements</Text>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>🧪 Test Setup</Text>
 
             <Text style={[styles.label, { color: colours.text, fontSize: 14 * colours.textScale }]}>Thickness (mm)</Text>
             <View style={styles.wrapRow}>
@@ -151,7 +150,7 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
           </View>
 
           <View style={[cardStyle, { marginBottom: 40 }]}>
-            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>Calculated Results</Text>
+            <Text style={[styles.cardTitle, { color: colours.text, fontSize: 18 * colours.textScale }]}>📊 Fan Power Results</Text>
 
             <View style={styles.row}>
               <View style={styles.metric}>
@@ -169,10 +168,10 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
             <Text style={[styles.resultText, { color: colours.text, fontSize: 15 * colours.textScale }]}>Angle in radians: {round(result.angleRad)}</Text>
           </View>
 
-          <TouchableOpacity style={[styles.logButton, { borderColor: colours.border, backgroundColor: colours.card, borderWidth: highContrast ? 3 : 2 }]} onPress={handleLogResults}>
+          <TouchableOpacity style={[styles.logButton, { borderColor: "#7c3aed", backgroundColor: "#7c3aed", borderWidth: highContrast ? 3 : 1 }]} onPress={handleLogResults}>
             <View style={styles.logButtonContent}>
-              <Text style={[styles.logButtonText, { color: colours.text, fontSize: 20 * colours.textScale }]}>Log Results</Text>
-              <Text style={[styles.arrowIcon, { color: colours.subText }]}>➔</Text>
+              <Text style={[styles.logButtonText, { color: "#ffffff", fontSize: 20 * colours.textScale }]}>Log Results</Text>
+              <Text style={[styles.arrowIcon, { color: "#ffffff" }]}>➔</Text>
             </View>
           </TouchableOpacity>
 
@@ -181,7 +180,7 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
             <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Quit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.submitButton, { backgroundColor: colours.success, borderColor: colours.border, borderWidth: highContrast ? 3 : 2 }]} onPress={onSubmit}>
-            <Text style={[styles.bottomButtonText, { color: colours.text, fontSize: 24 * colours.textScale }]}>Submit</Text>
+            <Text style={[styles.bottomButtonText, { color: "#ffffff", fontSize: 24 * colours.textScale }]}>Submit</Text>
           </TouchableOpacity>
         </View>
         </ScrollView>
@@ -191,54 +190,43 @@ export default function HandFanActivity({ onBack, onLogResults, onSubmit }: Prop
 }
 
 const styles = StyleSheet.create({
-  outer: { flex: 1, backgroundColor: "#ffffff" },
+  outer: { flex: 1, backgroundColor: "#f8f5ff" },
   frame: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 58,
     paddingBottom: 28,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8f5ff",
   },
-  title: { fontSize: 22, fontWeight: "800", color: "#000000", marginBottom: 40 },
+  title: { fontSize: 24, fontWeight: "900", color: "#18181b", marginBottom: 20, lineHeight: 32 },
   card: {
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#ede9fe",
     borderRadius: 24,
     padding: 20,
     backgroundColor: "#ffffff",
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "#312e81",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
-  cardTitle: { fontSize: 18, color: "#666666", fontWeight: "600", marginBottom: 20 },
-  helpText: { fontSize: 14, color: "#64748b", lineHeight: 20, marginBottom: 12 },
+  cardTitle: { fontSize: 18, color: "#18181b", fontWeight: "900", marginBottom: 20 },
   row: { flexDirection: "row", gap: 10 },
   wrapRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 },
   chip: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 12,
-    paddingVertical: 10,
+    borderColor: "#ddd6fe",
+    borderRadius: 16,
+    paddingVertical: 12,
     paddingHorizontal: 10,
     alignItems: "center",
     marginBottom: 12,
     justifyContent: "center",
   },
-  chipSelected: { backgroundColor: "#1d5db1", borderColor: "#1d5db1" },
-  chipText: { color: "#1f2937", fontWeight: "800", fontSize: 18, textAlign: "center",},
-  chipTextSelected: { color: "#ffffff" },
-  outlineButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#1d5db1",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  outlineButtonText: { color: "#1d5db1", fontSize: 15, fontWeight: "800" },
+  chipText: { color: "#1f2937", fontWeight: "900", fontSize: 18, textAlign: "center" },
   label: {
     fontSize: 14,
     fontWeight: "800",
@@ -247,27 +235,28 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderColor: "#e4e4e7",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     fontSize: 16,
     marginBottom: 12,
-    color: "#0f172a",
+    color: "#18181b",
+    backgroundColor: "#fafafa",
   },
   metric: { flex: 1, alignItems: "center", marginBottom: 12 },
-  metricValue: { fontSize: 24, fontWeight: "800", color: "#1d5db1" },
-  metricLabel: { fontSize: 14, color: "#000000", fontWeight: "800" },
-  resultText: { fontSize: 15, color: "#1f2937", marginBottom: 6, fontWeight: "600" },
-  status: { fontSize: 15, color: "#1d5db1", fontWeight: "800", marginTop: 4 },
+  metricValue: { fontSize: 24, fontWeight: "900", color: "#7c3aed" },
+  metricLabel: { fontSize: 14, color: "#18181b", fontWeight: "800" },
+  resultText: { fontSize: 15, color: "#1f2937", marginBottom: 6, fontWeight: "700" },
   logButton: {
-    borderWidth: 2,
+    borderWidth: 1,
     height: 58,
-    borderColor: "#000000",
+    borderColor: "#7c3aed",
     borderRadius: 18,
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 20,
+    backgroundColor: "#7c3aed",
   },
   logButtonContent: {
     flexDirection: "row",
@@ -276,42 +265,48 @@ const styles = StyleSheet.create({
   },
   logButtonText: {
     fontSize: 20,
-    fontWeight: "400",
-    color: "#000000",
+    fontWeight: "900",
+    color: "#ffffff",
     textAlign: "center",
     flex: 1,
   },
   arrowIcon: {
     fontSize: 20,
-    color: "#999999",
+    color: "#ffffff",
   },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   quitButton: {
-    backgroundColor: "#F08787",
-    borderWidth: 2,
-    borderColor: "#000000",
-    borderRadius: 30,
+    backgroundColor: "#ef4444",
+    borderWidth: 0,
+    borderRadius: 18,
     height: 58,
     paddingVertical: 10,
     width: "45%",
     alignItems: "center",
+    justifyContent: "center",
   },
   submitButton: {
-    backgroundColor: "#A3DC9A",
-    borderWidth: 2,
+    backgroundColor: "#22c55e",
+    borderWidth: 0,
     height: 58,
-    borderColor: "#000000",
-    borderRadius: 30,
+    borderRadius: 18,
     paddingVertical: 10,
     width: "45%",
     alignItems: "center",
+    justifyContent: "center",
   },
   bottomButtonText: {
-    fontSize: 24,
-    fontWeight: "400",
-    color: "#000000",
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#ffffff",
   },
+  heroCard: { backgroundColor: "#ffffff", borderRadius: 26, padding: 18, marginBottom: 20, flexDirection: "row", alignItems: "center", gap: 18, borderWidth: 1, borderColor: "#ede9fe", shadowColor: "#312e81", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 3 },
+  heroIconBox: { width: 76, height: 76, borderRadius: 22, backgroundColor: "#f5f3ff", alignItems: "center", justifyContent: "center" },
+  heroEmoji: { fontSize: 34 },
+  heroTextGroup: { flex: 1 },
+  heroTitle: { fontSize: 24, fontWeight: "900", color: "#18181b", lineHeight: 32 },
+  heroSubtitle: { fontWeight: "800", marginTop: 4 },
 });

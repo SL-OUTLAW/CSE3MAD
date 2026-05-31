@@ -3,11 +3,13 @@ import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,6 +17,7 @@ import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { useTeam } from "../../context/TeamContext";
 import { db, loginWithEmail } from "../services/firebase";
 import { saveUserSession } from "../services/userSessionService";
+import SideQuestLogo from "../components/SideQuestLogo";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -84,42 +87,64 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>Side Quest</Text>
-          <Text style={styles.subtitle}>Login</Text>
+          <View style={styles.brandSection}>
+            <SideQuestLogo size={175} />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholderTextColor="#94a3b8"
-          />
+            <Text style={styles.appTitle}>
+              Side<Text style={styles.appTitleAccent}>Quest</Text>
+            </Text>
+            <Text style={styles.appSubtitle}>Real-World STEMM Games</Text>
+            <Text style={styles.appTagline}>Learn. Explore. Compete.</Text>
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#94a3b8"
-          />
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Welcome Back!</Text>
+            <Text style={styles.formSubtitle}>Login to your team</Text>
 
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => router.replace("/")}
-          >
-            <Text style={styles.secondaryButtonText}>Create New Team</Text>
-          </TouchableOpacity>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter email"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholderTextColor="#a1a1aa"
+            />
+
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#a1a1aa"
+            />
+
+            <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.dividerText}>or</Text>
+
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => router.replace("/")}
+            >
+              <Text style={styles.secondaryButtonText}>
+                Create / Register Team
+              </Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -127,60 +152,131 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f8fafc" },
-  keyboardView: { flex: 1 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f8f5ff",
+  },
+  keyboardView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 24,
     paddingBottom: 28,
+    justifyContent: "center",
   },
-  backButton: { marginBottom: 8 },
-  backText: { fontSize: 18, color: "#2563eb", fontWeight: "600" },
-  title: {
-    fontSize: 28,
+
+  brandSection: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 26,
+  },
+  appTitle: {
+    fontSize: 42,
+    fontWeight: "900",
+    color: "#18181b",
+    letterSpacing: -1,
+    marginTop: -8,
+  },
+  appTitleAccent: {
+    color: "#7c3aed",
+  },
+  appSubtitle: {
+    fontSize: 16,
     fontWeight: "800",
-    marginBottom: 8,
-    color: "#0f172a",
+    color: "#27272a",
+    marginTop: 8,
   },
-  subtitle: {
-    fontSize: 20,
+  appTagline: {
+    fontSize: 14,
     fontWeight: "700",
-    marginBottom: 30,
-    color: "#1e293b",
+    color: "#71717a",
+    marginTop: 6,
+  },
+
+  formCard: {
+    width: "100%",
+    backgroundColor: "#ffffff",
+    borderRadius: 28,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "#ede9fe",
+    shadowColor: "#312e81",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  formTitle: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#18181b",
+    marginBottom: 4,
+  },
+  formSubtitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#71717a",
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#3f3f46",
+    marginBottom: 8,
   },
   input: {
     width: "100%",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fafafa",
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 12,
-    borderRadius: 12,
+    borderColor: "#e4e4e7",
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    marginBottom: 16,
+    borderRadius: 18,
     fontSize: 16,
-    color: "#0f172a",
+    color: "#18181b",
   },
   primaryButton: {
     width: "100%",
-    backgroundColor: "#2563eb",
+    backgroundColor: "#6d28d9",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 8,
+    shadowColor: "#7c3aed",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
   },
   secondaryButton: {
     width: "100%",
     backgroundColor: "#ffffff",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
     borderWidth: 1,
-    borderColor: "#2563eb",
+    borderColor: "#8b5cf6",
   },
-  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "800" },
-  secondaryButtonText: { color: "#2563eb", fontSize: 16, fontWeight: "800" },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  secondaryButtonText: {
+    color: "#6d28d9",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  dividerText: {
+    textAlign: "center",
+    color: "#71717a",
+    fontSize: 14,
+    fontWeight: "800",
+    marginVertical: 12,
+  },
 });

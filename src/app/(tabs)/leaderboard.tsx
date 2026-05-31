@@ -64,7 +64,7 @@ export default function LeaderboardScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      style={[styles.safeArea, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
       edges={["top", "left", "right"]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -75,15 +75,6 @@ export default function LeaderboardScreen() {
           ]}
         >
           Leaderboard
-        </Text>
-
-        <Text
-          style={[
-            styles.bodyText,
-            { color: colours.subText, fontSize: 16 * colours.textScale },
-          ]}
-        >
-          Team scores update automatically from Firestore.
         </Text>
 
         {isLoading && (
@@ -222,20 +213,16 @@ export default function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: "#f8f5ff",},
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 28,
   },
   title: {
-    fontWeight: "800",
-    marginBottom: 8,
-  },
-  bodyText: {
-    lineHeight: 22,
-    marginBottom: 12,
+    fontWeight: "900",
+    marginBottom: 18,
   },
   messageCard: {
     padding: 16,
@@ -254,6 +241,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginVertical: 6,
     gap: 14,
+    shadowColor: "#312e81",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   rankBadge: {
     width: 44,

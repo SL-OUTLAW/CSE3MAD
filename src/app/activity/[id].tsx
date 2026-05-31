@@ -89,7 +89,7 @@ export default function ActivityDetailScreen() {
 
   const primaryButtonStyle = [
     styles.primaryButton,
-    { backgroundColor: colours.primary },
+    { backgroundColor: highContrast ? colours.primary : "#7c3aed"},
   ];
 
   const secondaryButtonStyle = [
@@ -104,7 +104,7 @@ export default function ActivityDetailScreen() {
   if (!activity) {
     return (
       <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: colours.background }]}
+      style={[styles.safeArea, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
       >
         <View style={styles.scrollContent}>
           <Text
@@ -136,7 +136,7 @@ export default function ActivityDetailScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colours.background }]}
+      style={[styles.safeArea, { backgroundColor: highContrast ? colours.background : "#f8f5ff" }]}
       edges={["top", "left", "right"]}
     >
       <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
@@ -151,7 +151,7 @@ export default function ActivityDetailScreen() {
                 { color: colours.primary, fontSize: 18 * colours.textScale },
               ]}
             >
-              ‹ Activities
+              ‹ Back to Activities
             </Text>
           </TouchableOpacity>
 
@@ -190,7 +190,7 @@ export default function ActivityDetailScreen() {
                   { color: colours.text, fontSize: 18 * colours.textScale },
                 ]}
               >
-                Equipment
+                🧰 Equipment
               </Text>
 
               {activity.equipment.map((item) => (
@@ -215,7 +215,7 @@ export default function ActivityDetailScreen() {
                   { color: colours.text, fontSize: 18 * colours.textScale },
                 ]}
               >
-                Instructions
+                📋 Instructions
               </Text>
 
               {activity.instructions.map((step, index) => (
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 58,
     paddingBottom: 28,
   },
   backButton: {
@@ -412,26 +412,32 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   title: {
-    fontWeight: "800",
+    fontWeight: "900",
     marginBottom: 8,
   },
   category: {
-    fontWeight: "700",
+    fontWeight: "900",
     marginBottom: 12,
   },
   bodyText: {
     lineHeight: 22,
-    marginBottom: 12,
+    marginBottom: 18,
+    fontWeight: "700",
   },
   card: {
-    width: "100%",
-    padding: 16,
-    borderRadius: 14,
+  width: "100%",
+    padding: 18,
+    borderRadius: 22,
     marginVertical: 8,
+    shadowColor: "#312e81",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
   cardTitle: {
-    fontWeight: "800",
-    marginBottom: 6,
+    fontWeight: "900",
+    marginBottom: 10,
   },
   cardText: {
     lineHeight: 21,
@@ -439,18 +445,20 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: "100%",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 14,
+    backgroundColor: "#7c3aed",
   },
   secondaryButton: {
     width: "100%",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 14,
+    backgroundColor: "#ffffff",
   },
   buttonText: {
     color: "#ffffff",
